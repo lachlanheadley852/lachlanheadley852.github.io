@@ -88,8 +88,10 @@ button:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
     <li><kbd>Space</kbd><kbd>Z</kbd> jump (hold = higher)</li>
     <li><kbd>Shift</kbd><kbd>X</kbd> run</li>
     <li><kbd>Enter</kbd> start</li>
+    <li><kbd>Esc</kbd> map</li>
   </ul>
   <div class="btns">
+    <button id="mapBtn" type="button">Map</button>
     <button id="restartBtn" type="button">Restart</button>
     <button id="muteBtn" type="button" aria-pressed="false">Sound on</button>
   </div>
@@ -130,46 +132,114 @@ const C = {
   text:'#fff4e0', shadow:'#1b1530'
 };
 
-// ---------- Level (one screen, 30 x 17 tiles) ----------
+// ---------- Levels (one screen each, 30 x 17 tiles) ----------
 //  #ground  B brick  ? rune block (coin)  * rune block (berry)  S stone  o coin  b beetle
-const LEVEL = [
-  "..............................",
-  "..............................",
-  "..............................",
-  "..............................",
-  "..............ooooo...........",
-  "..............BBBBB...........",
-  "..............................",
-  "..........................o...",
-  "....o.o.o.............b...o...",
-  "....................B?BB......",
-  "..............................",
-  "...B?B*B.......o..o...........",
-  "..........................S...",
-  ".........................SS...",
-  "......b.......b.b.......SSS...",
-  "#########...######...#########",
-  "#########...######...#########",
+const E = "..............................";
+const LEVELS = [
+  { name: 'Dusk Meadow', theme: 'dusk', portal: { x: 450, y: 192 }, plat: { x: 290, base: 170, amp: 58 }, map: [
+    E, E, E, E,
+    "..............ooooo...........",
+    "..............BBBBB...........",
+    E,
+    "..........................o...",
+    "....o.o.o.............b...o...",
+    "....................B?BB......",
+    E,
+    "...B?B*B.......o..o...........",
+    "..........................S...",
+    ".........................SS...",
+    "......b.......b.b.......SSS...",
+    "#########...######...#########",
+    "#########...######...#########",
+  ]},
+  { name: 'Brick Hills', theme: 'day', portal: { x: 450, y: 192 }, plat: null, map: [
+    E, E, E, E, E, E, E, E,
+    "....o.o.o.....................",
+    E,
+    "....................ooo.......",
+    "....B?B?B...............B*B...",
+    "..................SS..........",
+    ".................SSS..........",
+    "......b.......b.SSSS.......b..",
+    "##########..########...#######",
+    "##########..########...#######",
+  ]},
+  { name: 'Sky Steps', theme: 'day', portal: { x: 450, y: 192 }, plat: { x: 280, base: 178, amp: 36 }, map: [
+    E, E, E, E, E, E,
+    ".....................ooo......",
+    E,
+    ".............ooo..............",
+    E,
+    "........ooo..........BBB......",
+    ".B*B.........BBB..............",
+    E,
+    "........BBB...................",
+    "..........................b...",
+    "######..................######",
+    "######..................######",
+  ]},
+  { name: 'Night Marsh', theme: 'night', portal: { x: 450, y: 192 }, plat: null, map: [
+    E, E, E, E, E, E, E,
+    "......................oooo....",
+    "..ooooo.......................",
+    E,
+    "........ooo.......ooo.B?BB....",
+    "..BB*BB.......................",
+    "................S.............",
+    ".............S..S.............",
+    ".....b.......S.bS.......b..b..",
+    "########...#######...#########",
+    "########...#######...#########",
+  ]},
+  { name: 'Portal Spire', theme: 'dusk', portal: { x: 440, y: 96 }, plat: { x: 226, base: 196, amp: 40 }, map: [
+    E, E, E, E, E, E, E,
+    "........................oo....",
+    "..............oo..............",
+    ".........ooo...............SSS",
+    "........................SS.SSS",
+    ".B*B.......................SSS",
+    "....................S?S....SSS",
+    "...........................SSS",
+    "....S.....b.........b...b..SSS",
+    "#####...#####....#############",
+    "#####...#####....#############",
+  ]},
 ];
+const qs = new URLSearchParams(location.search);
+const LV = Math.min(LEVELS.length, Math.max(1, parseInt(qs.get('level'), 10) || 1)) - 1;
+const L = LEVELS[LV];
 const SOLID = new Set(['#','B','?','*','S','U']);
-const PORTAL = { x: 450, y: 192, w: 28, h: 48 };
+const PORTAL = { x: L.portal.x, y: L.portal.y, w: 28, h: 48 };
+const BEST_KEY = 'sprout-run-best-' + (LV + 1);
 
 // ---------- State ----------
 let tiles, enemies, coins, items, parts, pops, plat, player, bumps;
 let state = 'title', stateT = 0, frame = 0, timeF = 0;
 let score = 0, coinCount = 0, lives = 3, clearInfo = null;
 let best = null;
-try { const b = parseFloat(localStorage.getItem('sprout-run-best')); if (b > 0) best = b; } catch (e) {}
+try {
+  let b = parseFloat(localStorage.getItem(BEST_KEY));
+  if (!(b > 0) && LV === 0) b = parseFloat(localStorage.getItem('sprout-run-best'));
+  if (b > 0) best = b;
+} catch (e) {}
+function markCleared() {
+  try {
+    const c = JSON.parse(localStorage.getItem('sprout-run-cleared') || '[]');
+    if (Array.isArray(c) && !c.includes(LV + 1)) { c.push(LV + 1); localStorage.setItem('sprout-run-cleared', JSON.stringify(c)); }
+    else if (!Array.isArray(c)) localStorage.setItem('sprout-run-cleared', JSON.stringify([LV + 1]));
+  } catch (e) {}
+}
+function goMap() { location.href = 'index.html?from=' + (LV + 1); }
 
 function loadLevel() {
-  tiles = LEVEL.map(r => r.split(''));
+  tiles = L.map.map(r => r.split(''));
   enemies = []; coins = []; items = []; parts = []; pops = []; bumps = {};
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
     const c = tiles[y][x];
     if (c === 'o') { coins.push({ x: x*T + 4, y: y*T + 3, w: 8, h: 10 }); tiles[y][x] = '.'; }
     else if (c === 'b') { enemies.push({ x: x*T + 1, y: y*T + 4, w: 14, h: 12, vx: -0.45, vy: 0, st: 'walk', t: 0 }); tiles[y][x] = '.'; }
   }
-  plat = { x: 290, y: 170, w: 28, h: 6, base: 170, amp: 58, t: 0, dy: 0 };
+  plat = L.plat ? { x: L.plat.x, y: L.plat.base, w: 28, h: 6, base: L.plat.base, amp: L.plat.amp, t: 0, dy: 0 } : null;
   player = { x: 24, y: 240 - 14, w: 12, h: 14, vx: 0, vy: 0, vyPre: 0, onGround: true, onPlat: false,
              facing: 1, big: false, inv: 0, coyote: 0, jumpBuf: 0, anim: 0, jumping: false };
   timeF = 0;
@@ -218,7 +288,8 @@ const KEYMAP = { ArrowLeft:'left', KeyA:'left', ArrowRight:'right', KeyD:'right'
   ShiftLeft:'run', ShiftRight:'run', KeyX:'run', KeyJ:'run', ArrowDown:'down', KeyS:'down' };
 
 function press(a) {
-  if (a === 'jump' && (state === 'title' || state === 'over' || (state === 'clear' && stateT > 70))) { start(); return; }
+  if (a === 'jump' && (state === 'title' || state === 'over')) { start(); return; }
+  if (a === 'jump' && state === 'clear') { if (stateT > 70) goMap(); return; }
   if (!input[a] && a === 'jump') pressed.jump = true;
   input[a] = true;
 }
@@ -228,7 +299,12 @@ addEventListener('keydown', e => {
   audioInit();
   const a = KEYMAP[e.code];
   if (a) { e.preventDefault(); if (!e.repeat) press(a); return; }
-  if (e.code === 'Enter') { e.preventDefault(); if (state !== 'play' && state !== 'dying') start(); }
+  if (e.code === 'Enter') {
+    e.preventDefault();
+    if (state === 'clear') { if (stateT > 70) goMap(); }
+    else if (state !== 'play' && state !== 'dying') start();
+  }
+  else if (e.code === 'Escape') { e.preventDefault(); goMap(); }
   else if (e.code === 'KeyR') start();
   else if (e.code === 'KeyM') toggleMute();
 });
@@ -237,8 +313,10 @@ addEventListener('blur', () => { for (const k in input) input[k] = false; });
 
 cvs.addEventListener('pointerdown', () => {
   cvs.focus(); audioInit();
-  if (state === 'title' || state === 'over' || (state === 'clear' && stateT > 70)) start();
+  if (state === 'title' || state === 'over') start();
+  else if (state === 'clear' && stateT > 70) goMap();
 });
+document.getElementById('mapBtn').addEventListener('click', goMap);
 document.querySelectorAll('.touch button').forEach(b => {
   const a = b.dataset.act;
   const down = e => { e.preventDefault(); audioInit(); b.classList.add('on'); try { b.setPointerCapture(e.pointerId); } catch (_) {} press(a); };
@@ -255,6 +333,9 @@ muteBtn.addEventListener('click', () => { audioInit(); toggleMute(); cvs.focus()
 
 // ---------- Audio ----------
 let ac = null, muted = false;
+try { muted = localStorage.getItem('sprout-run-muted') === '1'; } catch (e) {}
+muteBtn.textContent = muted ? 'Sound off' : 'Sound on';
+muteBtn.setAttribute('aria-pressed', String(muted));
 function audioInit() {
   if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; } }
   if (ac && ac.state === 'suspended') ac.resume().catch(() => {});
@@ -263,6 +344,7 @@ function toggleMute() {
   muted = !muted;
   muteBtn.textContent = muted ? 'Sound off' : 'Sound on';
   muteBtn.setAttribute('aria-pressed', String(muted));
+  try { localStorage.setItem('sprout-run-muted', muted ? '1' : '0'); } catch (e) {}
 }
 function tone(f0, f1, dur, type = 'square', vol = 0.05, delay = 0) {
   if (!ac || muted) return;
@@ -349,6 +431,7 @@ function bumpTile(tx, ty) {
 
 // ---------- Updates ----------
 function updatePlat() {
+  if (!plat) return;
   plat.t++;
   const ny = plat.base + Math.sin(plat.t * 0.02) * plat.amp;
   plat.dy = ny - plat.y; plat.y = ny;
@@ -356,7 +439,7 @@ function updatePlat() {
 
 function updatePlayer() {
   const p = player;
-  if (p.onPlat) p.y += plat.dy;
+  if (p.onPlat && plat) p.y += plat.dy;
 
   const dir = (input.right ? 1 : 0) - (input.left ? 1 : 0);
   const max = input.run ? 2.5 : 1.5;
@@ -393,7 +476,7 @@ function updatePlayer() {
   if (r && r.floor) { p.vy = 0; p.onGround = true; p.jumping = false; }
   else if (r && r.ceil) { p.vy = 1; p.jumping = false; bumpTile(r.tx, r.ty); }
 
-  if (p.vy >= 0 && p.x + p.w > plat.x && p.x < plat.x + plat.w && p.y + p.h >= plat.y && prevBottom <= plat.y + 4) {
+  if (plat && p.vy >= 0 && p.x + p.w > plat.x && p.x < plat.x + plat.w && p.y + p.h >= plat.y && prevBottom <= plat.y + 4) {
     p.y = plat.y - p.h; p.vy = 0; p.onGround = true; p.onPlat = true; p.jumping = false;
   }
   if (p.onGround && !wasGround && p.vyPre > 3) {
@@ -412,7 +495,8 @@ function updatePlayer() {
     const bonus = Math.max(0, Math.ceil(90 - secs)) * 50;
     score += bonus;
     const newBest = best === null || secs < best;
-    if (newBest) { best = secs; try { localStorage.setItem('sprout-run-best', String(secs)); } catch (e) {} }
+    if (newBest) { best = secs; try { localStorage.setItem(BEST_KEY, String(secs)); } catch (e) {} }
+    markCleared();
     clearInfo = { secs, bonus, newBest };
     sfx.win();
   }
@@ -525,11 +609,28 @@ function step() {
 const rect = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
 const hash = (a, b) => (Math.imul(a * 73 + b * 151 + 17, 2654435761) >>> 0);
 
+// Sky themes per level
+const THEMES = {
+  dusk: { bands: ['#2b2766','#352e7a','#45378c','#5b3f9a','#7a4aa4','#9c56a6','#c0649f','#e07a92','#f49a86','#ffbb84','#ffd596'],
+          stars: 40, starH: 70, orb: { x: 352, y: 176, r: 28, hi: '#fff0b8', lo: '#ffe08a', stripes: '#ffbb84' },
+          ridge: ['#7a52a8', '#9468b8'], hills: ['#4a3c84', '#6250a0'], pine: '#382e6c',
+          cloud: ['#c98aa8', '#ffc9b8', '#f6a8a8', '#ffe2d0'] },
+  day:  { bands: ['#3a78d4','#4485da','#4f92e0','#5b9fe5','#68abe9','#76b7ed','#86c3f0','#97cff3','#a9daf6','#bbe4f8','#cdeefa'],
+          stars: 0, starH: 0, orb: { x: 396, y: 52, r: 16, hi: '#fffbe0', lo: '#fff0a8' },
+          ridge: ['#6fb0c8', '#8cc6d8'], hills: ['#4f9a6e', '#6cb886'], pine: '#3c7f5a',
+          cloud: ['#a9cbe6', '#ffffff', '#e4f1fb', '#ffffff'] },
+  night:{ bands: ['#0b0d24','#0f1230','#13173b','#181d46','#1d2350','#232a5a','#2a3264','#323b6e','#3b4578','#454f80','#4f5988'],
+          stars: 120, starH: 150, orb: { x: 96, y: 58, r: 14, hi: '#f6f2dc', lo: '#d8d3b4' },
+          ridge: ['#2a2f62', '#383e78'], hills: ['#1c2048', '#2a2f62'], pine: '#14173a',
+          cloud: ['#1c2048', '#3e4580', '#333a6e', '#555da0'] },
+};
+const TH = THEMES[L.theme] || THEMES.dusk;
+
 // Static backdrop, painted once at logical resolution
 const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
 (function paintBg() {
   const b = bg.getContext('2d');
-  const bands = ['#2b2766','#352e7a','#45378c','#5b3f9a','#7a4aa4','#9c56a6','#c0649f','#e07a92','#f49a86','#ffbb84','#ffd596'];
+  const bands = TH.bands;
   const bh = 20;
   bands.forEach((c, i) => {
     b.fillStyle = c; b.fillRect(0, i * bh, W, bh);
@@ -538,26 +639,26 @@ const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
   b.fillStyle = bands[bands.length - 1]; b.fillRect(0, bands.length * bh, W, H);
   // stars
   b.fillStyle = '#f4e9ff';
-  for (let i = 0; i < 40; i++) { const h = hash(i, 7); b.globalAlpha = 0.35 + (h % 60) / 100; b.fillRect(h % W, (h >> 9) % 70, 1, 1); }
+  for (let i = 0; i < TH.stars; i++) { const h = hash(i, 7); b.globalAlpha = 0.35 + (h % 60) / 100; b.fillRect(h % W, (h >> 9) % TH.starH, 1, 1); }
   b.globalAlpha = 1;
-  // sun
-  const sx = 352, sy = 176;
-  for (let y = -28; y <= 28; y++) { const w = Math.floor(Math.sqrt(28*28 - y*y)); b.fillStyle = y < -10 ? '#fff0b8' : '#ffe08a'; b.fillRect(sx - w, sy + y, w * 2, 1); }
-  b.fillStyle = '#ffbb84'; for (let i = 0; i < 4; i++) b.fillRect(sx - 30, sy + 4 + i * 6, 60, 2);
+  // sun / moon
+  const o = TH.orb, sx = o.x, sy = o.y, R = o.r;
+  for (let y = -R; y <= R; y++) { const w = Math.floor(Math.sqrt(R*R - y*y)); b.fillStyle = y < -R * 0.35 ? o.hi : o.lo; b.fillRect(sx - w, sy + y, w * 2, 1); }
+  if (o.stripes) { b.fillStyle = o.stripes; for (let i = 0; i < 4; i++) b.fillRect(sx - R - 2, sy + 4 + i * 6, R * 2 + 4, 2); }
   // far ridge
   for (let x = 0; x < W; x++) {
     const h = 150 + Math.sin(x * 0.018) * 14 + Math.sin(x * 0.047 + 1) * 7 + Math.sin(x * 0.11) * 2;
-    b.fillStyle = '#7a52a8'; b.fillRect(x, Math.round(h), 1, H);
-    b.fillStyle = '#9468b8'; b.fillRect(x, Math.round(h), 1, 1);
+    b.fillStyle = TH.ridge[0]; b.fillRect(x, Math.round(h), 1, H);
+    b.fillStyle = TH.ridge[1]; b.fillRect(x, Math.round(h), 1, 1);
   }
   // near hills
   for (let x = 0; x < W; x++) {
     const h = 188 + Math.sin(x * 0.026 + 2) * 16 + Math.sin(x * 0.061) * 6;
-    b.fillStyle = '#4a3c84'; b.fillRect(x, Math.round(h), 1, H);
-    b.fillStyle = '#6250a0'; b.fillRect(x, Math.round(h), 1, 2);
+    b.fillStyle = TH.hills[0]; b.fillRect(x, Math.round(h), 1, H);
+    b.fillStyle = TH.hills[1]; b.fillRect(x, Math.round(h), 1, 2);
   }
   // little pine silhouettes on the near hills
-  b.fillStyle = '#382e6c';
+  b.fillStyle = TH.pine;
   [30, 44, 120, 210, 226, 300, 404, 418].forEach((tx, i) => {
     const base = 188 + Math.sin(tx * 0.026 + 2) * 16 + Math.sin(tx * 0.061) * 6;
     const th = 14 + (i % 3) * 4;
@@ -568,10 +669,11 @@ const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
 const clouds = [ { x: 40, y: 34, s: 0.06 }, { x: 210, y: 18, s: 0.04 }, { x: 330, y: 60, s: 0.08 }, { x: 460, y: 40, s: 0.05 } ];
 function drawCloud(x, y) {
   x = Math.round(x);
-  rect(x + 6, y + 6, 34, 6, '#c98aa8');
-  rect(x + 4, y + 2, 14, 6, '#ffc9b8'); rect(x + 12, y - 2, 16, 8, '#ffc9b8'); rect(x + 24, y + 2, 14, 6, '#ffc9b8');
-  rect(x + 2, y + 5, 40, 4, '#f6a8a8');
-  rect(x + 14, y - 2, 10, 2, '#ffe2d0');
+  const [cs, cp, cb, chl] = TH.cloud;
+  rect(x + 6, y + 6, 34, 6, cs);
+  rect(x + 4, y + 2, 14, 6, cp); rect(x + 12, y - 2, 16, 8, cp); rect(x + 24, y + 2, 14, 6, cp);
+  rect(x + 2, y + 5, 40, 4, cb);
+  rect(x + 14, y - 2, 10, 2, chl);
 }
 
 function drawTile(c, tx, ty) {
@@ -728,6 +830,7 @@ function drawPortal() {
 }
 
 function drawPlat() {
+  if (!plat) return;
   const x = Math.round(plat.x), y = Math.round(plat.y);
   // chain up to the top of screen hint
   for (let cy = y - 6; cy > 96; cy -= 6) rect(x + plat.w / 2 - 1, cy, 2, 3, '#4a3c84');
@@ -758,6 +861,8 @@ function drawHUD() {
   drawCoin(150, 18, (frame >> 3) % 4);
   text('x' + String(coinCount).padStart(2, '0'), 162, 20);
   for (let i = 0; i < 3; i++) { if (i < lives) drawHeart(230 + i * 11, 20); else { ctx.globalAlpha = 0.25; drawHeart(230 + i * 11, 20); ctx.globalAlpha = 1; } }
+  text('LEVEL', 330, 8, 8, '#ffd596');
+  text(String(LV + 1) + '/' + LEVELS.length, 338, 20);
   text('TIME', W - 12, 8, 8, '#ffd596', 'right');
   text(String(Math.floor(timeF / 60)).padStart(3, '0'), W - 12, 20, 8, C.text, 'right');
 }
@@ -771,16 +876,18 @@ function panel(x, y, w, h) {
 function drawOverlay() {
   const blink = (frame >> 5) % 2 === 0;
   if (state === 'title') {
-    panel(110, 66, 260, 116);
-    text('SPROUT RUN', W / 2, 80, 16, '#ffd596', 'center');
-    text('Reach the portal on the right.', W / 2, 108, 8, C.text, 'center');
-    text('Stomp beetles, bump rune blocks.', W / 2, 122, 8, '#c9c4e8', 'center');
-    if (blink) text('PRESS ENTER OR TAP', W / 2, 146, 8, '#8fe8ff', 'center');
-    text(best ? 'BEST ' + fmtTime(best) : 'NO BEST TIME YET', W / 2, 164, 8, '#a3a2c4', 'center');
+    panel(100, 58, 280, 132);
+    text('LEVEL ' + (LV + 1) + ' OF ' + LEVELS.length, W / 2, 70, 8, '#ffb347', 'center');
+    text(L.name.toUpperCase(), W / 2, 86, 16, '#ffd596', 'center');
+    text('Reach the swirling portal.', W / 2, 114, 8, C.text, 'center');
+    text('Stomp beetles, bump rune blocks.', W / 2, 128, 8, '#c9c4e8', 'center');
+    if (blink) text('PRESS ENTER OR TAP', W / 2, 152, 8, '#8fe8ff', 'center');
+    text(best ? 'BEST ' + fmtTime(best) : 'NO BEST TIME YET', W / 2, 170, 8, '#a3a2c4', 'center');
   } else if (state === 'over') {
-    panel(140, 90, 200, 76);
-    text('GAME OVER', W / 2, 104, 16, '#ff8a7a', 'center');
-    if (blink) text('PRESS ENTER TO RETRY', W / 2, 140, 8, '#8fe8ff', 'center');
+    panel(130, 86, 220, 84);
+    text('GAME OVER', W / 2, 100, 16, '#ff8a7a', 'center');
+    if (blink) text('PRESS ENTER TO RETRY', W / 2, 132, 8, '#8fe8ff', 'center');
+    text('ESC FOR MAP', W / 2, 150, 8, '#a3a2c4', 'center');
   } else if (state === 'clear' && stateT > 50 && clearInfo) {
     panel(110, 62, 260, 128);
     text('LEVEL CLEAR!', W / 2, 76, 16, '#b4f5bb', 'center');
@@ -788,7 +895,7 @@ function drawOverlay() {
     text('BONUS  ' + clearInfo.bonus, 150, 118);
     text('SCORE  ' + score, 150, 132);
     text(clearInfo.newBest ? 'NEW BEST TIME!' : 'BEST   ' + fmtTime(best), clearInfo.newBest ? W / 2 : 150, 148, 8, clearInfo.newBest ? '#ffd447' : '#a3a2c4', clearInfo.newBest ? 'center' : 'left');
-    if (stateT > 70 && blink) text('PRESS ENTER TO PLAY AGAIN', W / 2, 170, 8, '#8fe8ff', 'center');
+    if (stateT > 70 && blink) text('PRESS ENTER FOR MAP', W / 2, 170, 8, '#8fe8ff', 'center');
   }
 }
 
