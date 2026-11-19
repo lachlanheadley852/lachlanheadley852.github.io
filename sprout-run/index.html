@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sprout Isles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;600&display=swap">
+<style>
+/* Overworld map for Sprout Run: same arcade frame as the game, 480x272 pixel grid. */
+:root{
+  --bg:#141526; --panel:#1e2038; --fg:#ece8f7; --muted:#a3a2c4; --accent:#ffb347;
+  --key:#2b2e4d; --keyEdge:#0d0e1c;
+  --pixel:"Press Start 2P", ui-monospace, "Courier New", monospace;
+  --body:"Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--fg); font-family:var(--body); font-size:14px;
+  box-sizing:border-box; margin:0;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:16px;
+  display:flex; flex-direction:column; align-items:center; gap:14px;
+  overflow-x:hidden;
+}
+.stage{
+  width:min(100%, 1024px, max(300px, calc((100vh - 170px) * 1.7647)));
+  aspect-ratio:480 / 272; max-width:100%; position:relative;
+}
+canvas{
+  display:block; width:100%; height:100%;
+  image-rendering:pixelated; image-rendering:crisp-edges;
+  border-radius:6px; outline:none;
+  box-shadow:0 0 0 3px var(--keyEdge), 0 0 0 5px var(--key), 0 18px 40px -12px #000;
+  touch-action:none; cursor:pointer;
+}
+canvas:focus-visible{ box-shadow:0 0 0 3px var(--keyEdge), 0 0 0 5px var(--accent), 0 18px 40px -12px #000; }
+.bar{
+  width:min(100%, 1024px, max(300px, calc((100vh - 170px) * 1.7647)));
+  display:flex; flex-wrap:wrap; gap:10px 22px; align-items:center; justify-content:space-between;
+  color:var(--muted);
+}
+.legend{ display:flex; flex-wrap:wrap; gap:8px 18px; margin:0; padding:0; list-style:none; }
+.legend li{ display:flex; align-items:center; gap:6px; }
+kbd{
+  font-family:var(--pixel); font-size:9px; color:var(--fg);
+  background:var(--key); border:1px solid var(--keyEdge); border-bottom-width:3px;
+  border-radius:4px; padding:4px 6px 3px; line-height:1;
+}
+.btns{ display:flex; gap:8px; }
+button{
+  font-family:var(--pixel); font-size:9px; letter-spacing:.04em;
+  color:var(--fg); background:var(--panel); border:1px solid var(--key);
+  border-radius:4px; padding:8px 10px; cursor:pointer;
+}
+button:hover{ border-color:var(--accent); }
+button:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.touch{ display:none; width:min(100%, 1024px); justify-content:space-between; gap:12px; user-select:none; -webkit-user-select:none; }
+.touch .grp{ display:flex; gap:12px; }
+.touch button{ width:64px; height:64px; font-size:14px; border-radius:50%; touch-action:none; background:var(--key); border:2px solid var(--keyEdge); }
+.touch button.on{ background:var(--accent); color:var(--bg); }
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+@media (pointer:coarse){ .touch{ display:flex; } .legend{ display:none; } }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <canvas id="map" width="960" height="544" tabindex="0" aria-label="Sprout Isles world map. Use arrow keys to walk between levels and Enter to play."></canvas>
+</div>
+<p id="sr" class="sr" aria-live="polite"></p>
+
+<div class="touch" aria-hidden="true">
+  <div class="grp">
+    <button data-act="back" aria-label="Previous level">◀</button>
+    <button data-act="fwd" aria-label="Next level">▶</button>
+  </div>
+  <div class="grp">
+    <button data-act="play" aria-label="Play level">A</button>
+  </div>
+</div>
+
+<div class="bar">
+  <ul class="legend">
+    <li><kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> walk</li>
+    <li><kbd>Enter</kbd><kbd>Space</kbd> play level</li>
+    <li>or click a level</li>
+  </ul>
+  <div class="btns">
+    <button id="resetBtn" type="button">Reset progress</button>
+    <button id="muteBtn" type="button" aria-pressed="false">Sound on</button>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const W = 480, H = 272;
+const cvs = document.getElementById('map');
+const ctx = cvs.getContext('2d');
+let S = 2;
+function resize() {
+  const r = cvs.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  S = Math.max(1, Math.ceil((r.width || W * 2) * dpr / W));
+  cvs.width = W * S; cvs.height = H * S;
+}
+if (window.ResizeObserver) new ResizeObserver(resize).observe(cvs);
+addEventListener('resize', resize);
+resize();
+if (document.fonts && document.fonts.load) { document.fonts.load('8px "Press Start 2P"').catch(() => {}); }
+
+// ---------- World layout ----------
+const LEVELS = ['Dusk Meadow', 'Brick Hills', 'Sky Steps', 'Night Marsh', 'Portal Spire'];
+const N = LEVELS.length;
+const NODES = [ { x: 64, y: 200 }, { x: 150, y: 150 }, { x: 240, y: 196 }, { x: 330, y: 128 }, { x: 420, y: 98 } ];
+// PATHS[i] runs from node i to node i+1
+const PATHS = [
+  [[64, 200], [64, 150], [150, 150]],
+  [[150, 150], [240, 150], [240, 196]],
+  [[240, 196], [300, 196], [300, 128], [330, 128]],
+  [[330, 128], [380, 128], [380, 98], [420, 98]],
+];
+
+const C = {
+  stone:'#8b8fb0', stoneL:'#c6cae4', stoneD:'#545979',
+  hood:'#3fc1b0', hoodL:'#8beadb', hoodD:'#22786e', skin:'#ffd2a8', cheek:'#ff9a8a', eye:'#1b1530',
+  scarf:'#ff6b4a', scarfD:'#c8432c', boot:'#3b2a4a', leaf:'#8fe36b', leafD:'#4fae4a',
+  rune:'#f2b134', runeL:'#ffe7a0', runeD:'#a8641a', go:'#6fd08a', goL:'#b4f5bb', goD:'#3e9a5a',
+  text:'#fff4e0', shadow:'#1b1530'
+};
+
+// ---------- Saved progress ----------
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} },
+};
+let cleared = new Set();
+try { const c = JSON.parse(store.get('sprout-run-cleared') || '[]'); if (Array.isArray(c)) cleared = new Set(c); } catch (e) {}
+const isCleared = i => cleared.has(i + 1);
+let maxU = 0; while (maxU < N - 1 && isCleared(maxU)) maxU++;
+let clearedCount = 0; for (let i = 0; i < N; i++) if (isCleared(i)) clearedCount++;
+function bestOf(i) {
+  let b = parseFloat(store.get('sprout-run-best-' + (i + 1)));
+  if (!(b > 0) && i === 0) b = parseFloat(store.get('sprout-run-best'));
+  return b > 0 ? b : null;
+}
+let seen = parseInt(store.get('sprout-run-map-seen'), 10);
+if (!(seen >= 0)) seen = 0;
+if (seen > maxU) seen = maxU;
+
+const qs = new URLSearchParams(location.search);
+let startN = parseInt(qs.get('from'), 10);
+if (!(startN >= 1 && startN <= N)) startN = parseInt(store.get('sprout-run-map-pos'), 10) + 1;
+let startIdx = (startN >= 1 && startN <= N) ? startN - 1 : 0;
+startIdx = Math.min(startIdx, maxU);
+if (qs.has('from')) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+
+// ---------- Helpers ----------
+const rect = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+const hash = (a, b) => (Math.imul(a * 73 + b * 151 + 17, 2654435761) >>> 0);
+function distSeg(x, y, a, b) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy;
+  const t = l2 ? Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / l2)) : 0;
+  return Math.hypot(x - (a[0] + dx * t), y - (a[1] + dy * t));
+}
+function polyLen(p) { let l = 0; for (let i = 1; i < p.length; i++) l += Math.hypot(p[i][0] - p[i-1][0], p[i][1] - p[i-1][1]); return l; }
+function pointAt(p, d) {
+  for (let i = 1; i < p.length; i++) {
+    const sx = p[i-1][0], sy = p[i-1][1], ex = p[i][0], ey = p[i][1], l = Math.hypot(ex - sx, ey - sy);
+    if (d <= l) { const t = l ? d / l : 0; return [sx + (ex - sx) * t, sy + (ey - sy) * t, ex - sx, ey - sy]; }
+    d -= l;
+  }
+  const e = p[p.length - 1]; return [e[0], e[1], 0, 0];
+}
+const segPoints = (a, b) => a < b ? PATHS[a] : PATHS[b].slice().reverse();
+const riverX = y => 196 + Math.sin(y * 0.045) * 7;
+const overRiver = (x, y) => Math.abs(x - riverX(y)) < 12 && y > 140 && y < 160;
+
+// ---------- Static island, painted once ----------
+const blobs = [[95,185,80,62],[150,140,62,48],[250,180,72,58],[322,140,62,58],[410,112,64,60],[440,182,42,34],[58,122,40,30],[462,236,20,12],[262,58,24,12],[28,44,16,9]];
+function field(x, y) {
+  let f = -9;
+  for (const [cx, cy, rx, ry] of blobs) { const dx = (x - cx) / rx, dy = (y - cy) / ry; f = Math.max(f, 1 - dx * dx - dy * dy); }
+  return f + (Math.sin(x * 0.09 + y * 0.05) * 0.5 + Math.sin(x * 0.031 - y * 0.11 + 2) * 0.5) * 0.12;
+}
+const F = new Float32Array(W * H), mask = new Uint8Array(W * H); // 1 land, 2 river
+for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+  const f = field(x, y), i = y * W + x; F[i] = f;
+  if (f > 0) mask[i] = Math.abs(x - riverX(y)) < 5.5 ? 2 : 1;
+}
+const isLand = (x, y) => x >= 0 && x < W && y >= 0 && y < H && mask[y * W + x] === 1;
+
+const land = document.createElement('canvas'); land.width = W; land.height = H;
+const sparkles = [];
+(function paintLand() {
+  const g = land.getContext('2d');
+  const img = g.createImageData(W, H), d = img.data;
+  const hex = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+  const P = {
+    deep: hex('#2c5fb4'), sea: hex('#3a7bd5'), seaL: hex('#5a98e6'), foam: hex('#d8f3ff'), river: hex('#4a8ae0'),
+    grass: hex('#6fd08a'), grassL: hex('#8fe39a'), grassD: hex('#5bbd78'), rim: hex('#b4f5bb'),
+    dirt: hex('#9a5f3c'), dirtD: hex('#6e3f28'), dirtL: hex('#b97a50')
+  };
+  // pass 1: land + cliff faces under land edges
+  const kind = new Uint8Array(W * H); // 1 land, 3 cliff
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x;
+    if (mask[i] === 1) { kind[i] = 1; continue; }
+    for (let k = 1; k <= 5; k++) if (isLand(x, y - k)) { kind[i] = 3; break; }
+  }
+  const solidish = (x, y) => x >= 0 && x < W && y >= 0 && y < H && kind[y * W + x] > 0;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x; let c;
+    if (kind[i] === 1) {
+      if (!isLand(x, y - 1)) c = P.rim;
+      else { const h = hash(x, y) % 100; c = h < 6 ? P.grassL : h < 12 ? P.grassD : P.grass; }
+    } else if (kind[i] === 3) {
+      let k = 1; while (k <= 5 && !isLand(x, y - k)) k++;
+      const h = hash(x * 3, y) % 100;
+      c = k <= 3 ? (h < 10 ? P.dirtL : P.dirt) : P.dirtD;
+    } else {
+      const r = mask[i] === 2 ? 1 : 2;
+      let near = false;
+      for (let dy = -r; dy <= r && !near; dy++) for (let dx = -r; dx <= r; dx++) if (solidish(x + dx, y + dy)) { near = true; break; }
+      if (near) c = P.foam;
+      else if (mask[i] === 2) c = ((y + (x >> 1)) % 9 === 0) ? P.seaL : P.river;
+      else {
+        c = F[i] < -0.9 ? P.deep : P.sea;
+        if (hash(x >> 3, y) % 37 === 0 && (x & 7) < 3) c = P.seaL;
+        if (hash(x, y * 7) % 900 === 0 && sparkles.length < 40 && y < 236) sparkles.push([x, y]);
+      }
+    }
+    d[i * 4] = c[0]; d[i * 4 + 1] = c[1]; d[i * 4 + 2] = c[2]; d[i * 4 + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+
+  const R = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+  // bridge over the river on the 2 -> 3 path
+  const by = 150, bx0 = 184, bx1 = 212;
+  R(bx0, by - 5, bx1 - bx0, 10, '#8a5a32');
+  for (let x = bx0 + 1; x < bx1 - 1; x += 3) { R(x, by - 4, 2, 8, '#d59a5e'); R(x, by - 4, 2, 1, '#f3c58f'); }
+  R(bx0, by - 6, bx1 - bx0, 1, '#6e3f28'); R(bx0, by + 5, bx1 - bx0, 1, '#6e3f28');
+  R(bx0 - 1, by - 7, 2, 4, '#6e3f28'); R(bx1 - 1, by - 7, 2, 4, '#6e3f28');
+  R(bx0 - 1, by + 4, 2, 4, '#6e3f28'); R(bx1 - 1, by + 4, 2, 4, '#6e3f28');
+
+  // scenery, kept clear of paths, nodes, river and the spire
+  let seed = 1337;
+  const rnd = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
+  const distPaths = (x, y) => { let m = 1e9; for (const p of PATHS) for (let i = 1; i < p.length; i++) m = Math.min(m, distSeg(x, y, p[i-1], p[i])); return m; };
+  const decor = [];
+  for (let k = 0; k < 1500 && decor.length < 64; k++) {
+    const x = (8 + rnd() * (W - 16)) | 0, y = (34 + rnd() * (H - 70)) | 0;
+    if (!isLand(x, y) || !isLand(x - 7, y) || !isLand(x + 7, y) || !isLand(x, y + 4)) continue;
+    if (Math.abs(x - riverX(y)) < 14 || distPaths(x, y) < 11 || y > 232) continue;
+    if (NODES.some(n => Math.hypot(n.x - x, n.y - y) < 22)) continue;
+    if (x > 396 && x < 446 && y < 112) continue;
+    if (decor.some(o => Math.hypot(o.x - x, o.y - y) < 12)) continue;
+    const r = rnd();
+    decor.push({ x, y, t: r < 0.45 ? 'pine' : r < 0.7 ? 'bush' : r < 0.84 ? 'rock' : 'flowers' });
+  }
+  decor.sort((a, b) => a.y - b.y);
+  for (const o of decor) {
+    const { x, y } = o;
+    if (o.t === 'pine') {
+      R(x - 5, y - 1, 10, 2, '#58b977');
+      R(x - 1, y - 4, 2, 4, '#6e3f28');
+      for (let r = 0; r < 11; r++) {
+        const w = (r >> 1) + 1, yy = y - 15 + r;
+        R(x - w, yy, w * 2, 1, '#2f7d55'); R(x - w, yy, w, 1, '#45a66b');
+      }
+      R(x - 1, y - 15, 1, 1, '#6cc489');
+    } else if (o.t === 'bush') {
+      R(x - 5, y - 1, 10, 2, '#58b977');
+      const rows = [4, 6, 7, 7, 6, 4];
+      rows.forEach((w, r) => R(x - w / 2 | 0, y - 7 + r, w, 1, '#3f9c5f'));
+      R(x - 2, y - 6, 2, 1, '#6cc489'); R(x - 3, y - 5, 1, 1, '#6cc489');
+    } else if (o.t === 'rock') {
+      R(x - 4, y - 1, 9, 2, '#58b977');
+      R(x - 3, y - 4, 7, 4, C.stone); R(x - 3, y - 4, 7, 1, C.stoneL); R(x - 3, y - 1, 7, 1, C.stoneD); R(x + 3, y - 4, 1, 4, C.stoneD);
+    } else {
+      [[-3, -1, '#ff9ac0'], [1, -3, '#fff6c0'], [3, 0, '#ffffff'], [-1, 1, '#ff9ac0']].forEach(([dx, dy, col]) => { R(x + dx, y + dy, 2, 2, col); R(x + dx, y + dy + 2, 1, 1, '#3e9a5a'); });
+    }
+  }
+})();
+
+// ---------- State ----------
+let frame = 0;
+const hero = { node: startIdx, x: NODES[startIdx].x, y: NODES[startIdx].y, goal: startIdx, moving: null, facing: 1, anim: 0 };
+let reveal = maxU > seen ? { seg: seen, d: 0, wait: 45, dots: 0 } : null;
+const pop = new Array(N).fill(0);
+let flash = null;          // { i, t } locked-node message
+let trans = { dir: 1, t: 0 }; // opening wipe
+let leaving = false;
+
+function announce() {
+  const i = hero.node;
+  const msg = 'Level ' + (i + 1) + ', ' + LEVELS[i] + '. ' + (isCleared(i) ? 'Cleared. ' : '') + 'Press Enter to play.';
+  document.getElementById('sr').textContent = msg;
+}
+announce();
+
+// ---------- Movement ----------
+const busy = () => !!reveal || leaving;
+function stepToward() {
+  if (hero.moving || hero.goal === hero.node) return;
+  const to = hero.node + Math.sign(hero.goal - hero.node);
+  const pts = segPoints(hero.node, to);
+  hero.moving = { pts, d: 0, len: polyLen(pts), to };
+}
+function lockedHit(i) { flash = { i, t: 70 }; sfx.locked(); }
+function tryMove(vx, vy, fallback) {
+  if (busy()) return;
+  const at = hero.goal, cands = [];
+  if (at < N - 1) { const p = PATHS[at]; cands.push({ to: at + 1, dx: p[1][0] - p[0][0], dy: p[1][1] - p[0][1] }); }
+  if (at > 0) { const p = segPoints(at, at - 1); cands.push({ to: at - 1, dx: p[1][0] - p[0][0], dy: p[1][1] - p[0][1] }); }
+  let pick = null, bestDot = 0.3;
+  for (const c of cands) { const l = Math.hypot(c.dx, c.dy) || 1, dot = (c.dx * vx + c.dy * vy) / l; if (dot > bestDot) { bestDot = dot; pick = c.to; } }
+  if (pick === null) pick = at + fallback;
+  if (pick < 0 || pick > N - 1) return;
+  if (pick > maxU) { lockedHit(pick); return; }
+  hero.goal = pick; stepToward();
+}
+function enterLevel() {
+  if (busy() || hero.moving) return;
+  leaving = true; trans = { dir: -1, t: 0, go: hero.node };
+  store.set('sprout-run-map-pos', String(hero.node));
+  sfx.enter();
+}
+
+// ---------- Input ----------
+addEventListener('keydown', e => {
+  audioInit();
+  const k = e.code;
+  if (k === 'ArrowRight' || k === 'KeyD') { e.preventDefault(); tryMove(1, 0, 1); }
+  else if (k === 'ArrowLeft' || k === 'KeyA') { e.preventDefault(); tryMove(-1, 0, -1); }
+  else if (k === 'ArrowUp' || k === 'KeyW') { e.preventDefault(); tryMove(0, -1, -1); }
+  else if (k === 'ArrowDown' || k === 'KeyS') { e.preventDefault(); tryMove(0, 1, 1); }
+  else if (k === 'Enter' || k === 'Space' || k === 'KeyZ' || k === 'KeyK') { e.preventDefault(); if (!e.repeat) enterLevel(); }
+  else if (k === 'KeyM') toggleMute();
+});
+cvs.addEventListener('pointerdown', e => {
+  cvs.focus(); audioInit();
+  const r = cvs.getBoundingClientRect();
+  const x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H;
+  let hit = -1, bd = 1e9;
+  NODES.forEach((n, i) => { const dd = Math.hypot(n.x - x, n.y - 4 - y); if (dd < 16 && dd < bd) { bd = dd; hit = i; } });
+  if (hit < 0 && x > 404 && x < 436 && y > 36 && y < 100) hit = 4;
+  if (hit < 0 || busy()) return;
+  if (hit === hero.node && !hero.moving) enterLevel();
+  else if (hit <= maxU) { hero.goal = hit; stepToward(); }
+  else lockedHit(hit);
+});
+document.querySelectorAll('.touch button').forEach(b => {
+  const a = b.dataset.act;
+  b.addEventListener('pointerdown', e => {
+    e.preventDefault(); audioInit(); b.classList.add('on');
+    if (a === 'fwd') tryMove(0, 0, 1); else if (a === 'back') tryMove(0, 0, -1); else enterLevel();
+  });
+  const up = () => b.classList.remove('on');
+  b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('pointerleave', up);
+  b.addEventListener('contextmenu', e => e.preventDefault());
+});
+const resetBtn = document.getElementById('resetBtn');
+let resetArm = 0;
+resetBtn.addEventListener('click', () => {
+  if (!resetArm) {
+    resetBtn.textContent = 'Sure? Click again';
+    resetArm = setTimeout(() => { resetArm = 0; resetBtn.textContent = 'Reset progress'; }, 3000);
+    return;
+  }
+  clearTimeout(resetArm);
+  ['sprout-run-cleared', 'sprout-run-map-seen', 'sprout-run-map-pos', 'sprout-run-best'].forEach(store.del);
+  for (let i = 1; i <= N; i++) store.del('sprout-run-best-' + i);
+  location.reload();
+});
+// coming back with the browser's Back button: reload so progress is fresh
+addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
+
+// ---------- Audio ----------
+const muteBtn = document.getElementById('muteBtn');
+let ac = null, muted = store.get('sprout-run-muted') === '1';
+function syncMute() { muteBtn.textContent = muted ? 'Sound off' : 'Sound on'; muteBtn.setAttribute('aria-pressed', String(muted)); }
+syncMute();
+function audioInit() {
+  if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; } }
+  if (ac && ac.state === 'suspended') ac.resume().catch(() => {});
+}
+function toggleMute() { muted = !muted; syncMute(); store.set('sprout-run-muted', muted ? '1' : '0'); }
+muteBtn.addEventListener('click', () => { audioInit(); toggleMute(); cvs.focus(); });
+function tone(f0, f1, dur, type = 'square', vol = 0.05, delay = 0) {
+  if (!ac || muted) return;
+  const t = ac.currentTime + delay, o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.setValueAtTime(f0, t);
+  if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur + 0.03);
+}
+const notes = (list, gap, type = 'square', vol = 0.04, len = 0.12) => list.forEach((f, i) => tone(f, 0, len, type, vol, i * gap));
+const sfx = {
+  step:   () => tone(520, 0, 0.05, 'square', 0.03),
+  tick:   () => tone(1200, 0, 0.03, 'square', 0.02),
+  unlock: () => notes([523, 659, 784, 1047], 0.07, 'square', 0.04),
+  locked: () => tone(160, 110, 0.18, 'triangle', 0.12),
+  enter:  () => notes([392, 523, 784], 0.08, 'square', 0.045, 0.14),
+};
+
+// ---------- Update ----------
+function step() {
+  frame++;
+  if (reveal) {
+    if (reveal.wait > 0) reveal.wait--;
+    else {
+      const len = polyLen(PATHS[reveal.seg]);
+      reveal.d += 1.8;
+      const dots = Math.floor(reveal.d / 6);
+      if (dots !== reveal.dots) { reveal.dots = dots; sfx.tick(); }
+      if (reveal.d >= len) {
+        seen = reveal.seg + 1; store.set('sprout-run-map-seen', String(seen));
+        pop[seen] = 24; sfx.unlock();
+        reveal = seen < maxU ? { seg: seen, d: 0, wait: 12, dots: 0 } : null;
+      }
+    }
+  }
+  if (hero.moving) {
+    const m = hero.moving;
+    m.d += 1.5;
+    const [x, y, dx] = pointAt(m.pts, m.d);
+    hero.x = x; hero.y = y; if (dx) hero.facing = Math.sign(dx);
+    hero.anim += 0.2;
+    if (m.d >= m.len) {
+      hero.node = m.to; hero.moving = null; hero.x = NODES[m.to].x; hero.y = NODES[m.to].y;
+      store.set('sprout-run-map-pos', String(hero.node));
+      sfx.step(); announce(); stepToward();
+    }
+  }
+  for (let i = 0; i < N; i++) if (pop[i] > 0) pop[i]--;
+  if (flash && --flash.t <= 0) flash = null;
+  if (trans) {
+    trans.t++;
+    if (trans.t >= 36) {
+      if (trans.dir < 0) { trans.t = 36; if (!trans.sent) { trans.sent = true; location.href = 'sprout-run.html?level=' + (trans.go + 1); } }
+      else trans = null;
+    }
+  }
+}
+
+// ---------- Drawing ----------
+function text(str, x, y, size = 8, color = C.text, align = 'left') {
+  ctx.font = `${size}px "Press Start 2P", ui-monospace, monospace`;
+  ctx.textAlign = align; ctx.textBaseline = 'top';
+  ctx.fillStyle = C.shadow; ctx.fillText(str, x + 1, y + 1);
+  ctx.fillStyle = color; ctx.fillText(str, x, y);
+}
+function panel(x, y, w, h) {
+  ctx.fillStyle = 'rgba(20,16,44,0.88)'; ctx.fillRect(x, y, w, h);
+  rect(x, y, w, 2, '#ffb347'); rect(x, y + h - 2, w, 2, '#ffb347');
+  rect(x, y, 2, h, '#ffb347'); rect(x + w - 2, y, 2, h, '#ffb347');
+}
+function fmtTime(s) { const m = Math.floor(s / 60), r = s - m * 60; return m + ':' + (r < 10 ? '0' : '') + r.toFixed(1); }
+
+function drawPath(seg, upto) {
+  const p = PATHS[seg], len = polyLen(p);
+  for (let d = 4; d < Math.min(upto, len - 4); d += 6) {
+    const [x, y] = pointAt(p, d), px = Math.round(x), py = Math.round(y);
+    if (overRiver(px, py)) continue;
+    rect(px - 1, py + 1, 3, 1, '#3e9a5a');
+    rect(px - 1, py - 1, 3, 2, '#fff1cf');
+  }
+}
+
+function pad(x, y, top, bot, hi) {
+  rect(x - 9, y - 4, 18, 9, C.shadow);
+  const rows = [5, 8, 9, 9, 9, 8, 5];
+  rows.forEach((w, r) => rect(x - w, y - 3 + r, w * 2, 1, r < 4 ? top : bot));
+  rect(x - 5, y - 3, 6, 1, hi);
+}
+
+function drawTower() {
+  const n = NODES[4], cx = n.x, base = n.y - 3, top = 48, x0 = cx - 11, w = 22;
+  const lit = seen >= 4, done = isCleared(4);
+  rect(x0 - 1, top - 1, w + 2, base - top + 1, C.shadow);
+  rect(x0, top, w, base - top, C.stone);
+  rect(x0, top, 3, base - top, C.stoneL); rect(x0 + w - 3, top, 3, base - top, C.stoneD);
+  for (let yy = top + 6, r = 0; yy < base; yy += 6, r++) {
+    rect(x0 + 3, yy, w - 6, 1, C.stoneD);
+    const off = r % 2 ? 7 : 12; rect(x0 + off, yy + 1, 1, 5, C.stoneD);
+  }
+  rect(x0 - 3, top - 4, w + 6, 4, C.stone); rect(x0 - 3, top - 4, w + 6, 1, C.stoneL); rect(x0 - 3, top - 1, w + 6, 1, C.stoneD);
+  for (let k = 0; k < 4; k++) { rect(x0 - 3 + k * 7, top - 9, 5, 5, C.stone); rect(x0 - 3 + k * 7, top - 9, 5, 1, C.stoneL); }
+  const px = cx - 5, py = top + 5, pw = 10, ph = 16;
+  rect(px - 1, py - 1, pw + 2, ph + 2, C.stoneD);
+  if (lit) {
+    const cols = ['#24195a', '#5b3fd0', '#9b7cff', '#8fe8ff'];
+    for (let i = 0; i < 4; i++) rect(px + i, py + i, pw - i * 2, ph - i * 2, cols[(i + (frame >> 3)) % 4]);
+  } else rect(px, py, pw, ph, '#2a2340');
+  rect(cx - 3, base - 9, 6, 9, '#3e2c26'); rect(cx - 3, base - 10, 6, 1, C.stoneD);
+  if (done) for (let k = 0; k < 3; k++) { const t = (frame + k * 23) % 60; if (t < 20) rect(cx - 12 + ((k * 13) % 24), top - 12 - (t >> 2), 2, 2, '#fff6c0'); }
+}
+
+function drawNode(i) {
+  const n = NODES[i], open = i <= seen, done = isCleared(i);
+  ctx.save();
+  if (pop[i] > 0) { const s = 1 + Math.sin((24 - pop[i]) / 24 * Math.PI) * 0.6; ctx.translate(n.x, n.y); ctx.scale(s, s); ctx.translate(-n.x, -n.y); }
+  if (done) pad(n.x, n.y, C.go, C.goD, C.goL);
+  else if (open) {
+    pad(n.x, n.y, C.rune, C.runeD, C.runeL);
+    const ring = (frame >> 3) % 8;
+    if (ring < 4) { ctx.globalAlpha = 0.5 - ring * 0.12; ctx.strokeStyle = '#fff6c0'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(n.x, n.y, 10 + ring * 2, 5 + ring, 0, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1; }
+  } else {
+    pad(n.x, n.y, C.stone, C.stoneD, C.stoneL);
+    rect(n.x - 2, n.y - 5, 4, 1, '#3e2c26'); rect(n.x - 3, n.y - 4, 1, 2, '#3e2c26'); rect(n.x + 2, n.y - 4, 1, 2, '#3e2c26');
+    rect(n.x - 3, n.y - 2, 6, 4, '#3e2c26'); rect(n.x - 1, n.y - 1, 2, 2, '#ffd447');
+  }
+  ctx.restore();
+  if (done && i !== 4) {
+    const fx = n.x + 8, wave = (frame >> 3) % 2;
+    rect(fx, n.y - 16, 1, 16, '#3e2c26');
+    rect(fx + 1, n.y - 16, 6, 4, '#ff6b4a'); rect(fx + 1, n.y - 13, 6, 1, '#c8432c');
+    rect(fx + 6 + wave, n.y - 15, 1, 2, '#ff6b4a');
+  }
+  let shake = 0;
+  if (flash && flash.i === i) shake = Math.round(Math.sin(flash.t * 1.3) * 2);
+  text(String(i + 1), n.x + shake, n.y + 7, 8, open ? (done ? '#b4f5bb' : '#ffe7a0') : '#c6cae4', 'center');
+}
+
+function drawHero() {
+  const moving = !!hero.moving;
+  const x = Math.round(hero.x) - 6, y = Math.round(hero.y) - 14 - (!moving && (frame >> 5) % 2 ? 1 : 0);
+  const R = (rx, ry, rw, rh, c) => { ctx.fillStyle = c; ctx.fillRect(x + (hero.facing > 0 ? rx : 12 - rx - rw), y + ry, rw, rh); };
+  ctx.fillStyle = 'rgba(20,16,44,0.35)'; ctx.fillRect(x + 1, Math.round(hero.y) - 1, 10, 2);
+  const stepF = moving ? Math.floor(hero.anim) % 4 : 0, sway = (frame >> 4) % 2, hh = 7;
+  R(5, -3, 1, 3, C.leafD); R(6, -4 + sway, 3, 2, C.leaf); R(2, -3, 3, 1, C.leaf);
+  R(1, 0, 10, hh, C.hood); R(0, 1, 12, hh - 2, C.hood); R(1, 0, 9, 1, C.hoodL); R(0, 1, 1, hh - 3, C.hoodD);
+  R(5, 2, 6, hh - 3, C.skin); R(4, 3, 1, hh - 5, C.skin);
+  R(8, 3, 1, 2, C.eye); R(10, hh - 3, 1, 1, C.cheek);
+  R(1, hh, 10, 2, C.scarf); R(1, hh + 1, 10, 1, C.scarfD);
+  const flap = moving ? (frame >> 2) % 2 : 0;
+  R(-2, hh + flap, 3, 2, C.scarf); R(-3, hh + 1 + flap, 1, 1, C.scarfD);
+  const bodyTop = hh + 2;
+  R(2, bodyTop, 8, 3, C.hoodD); R(3, bodyTop, 6, 1, C.hood);
+  const armY = bodyTop + (stepF === 1 || stepF === 3 ? 1 : 0);
+  R(7, armY, 3, 3, C.hood); R(9, armY + 2, 2, 1, C.skin);
+  const ly = 12;
+  if (stepF === 1) { R(1, ly, 3, 2, C.boot); R(8, ly - 1, 3, 2, C.boot); }
+  else if (stepF === 3) { R(2, ly - 1, 3, 2, C.boot); R(7, ly, 3, 2, C.boot); }
+  else { R(2, ly, 3, 2, C.boot); R(7, ly, 3, 2, C.boot); }
+}
+
+const clouds = [ { x: 30, y: 70, s: 0.10 }, { x: 230, y: 34, s: 0.07 }, { x: 390, y: 168, s: 0.09 } ];
+function drawCloud(cx, cy) {
+  const x = Math.round(cx);
+  ctx.globalAlpha = 0.16; ctx.fillStyle = '#1b1530';
+  ctx.fillRect(x + 10, cy + 34, 34, 6); ctx.fillRect(x + 16, cy + 31, 20, 3);
+  ctx.globalAlpha = 0.9;
+  rect(x + 4, cy + 2, 14, 6, '#ffffff'); rect(x + 12, cy - 2, 16, 8, '#ffffff'); rect(x + 24, cy + 2, 14, 6, '#ffffff');
+  rect(x + 2, cy + 5, 40, 4, '#e4f1fb'); rect(x + 6, cy + 9, 32, 2, '#c4dcef');
+  ctx.globalAlpha = 1;
+}
+
+function drawHUD() {
+  text('SPROUT ISLES', 10, 8, 8, '#ffd596');
+  text('CLEARED ' + clearedCount + '/' + N, 10, 20, 8);
+  if (clearedCount === N && (frame >> 5) % 2 === 0) text('ALL CLEAR!', W - 10, 8, 8, '#ffd447', 'right');
+
+  const i = hero.moving ? hero.moving.to : hero.node;
+  panel(6, 240, W - 12, 26);
+  text('LEVEL ' + (i + 1), 16, 249, 8, '#ffb347');
+  text(LEVELS[i].toUpperCase(), 92, 249, 8, C.text);
+  let status, col;
+  if (flash) { status = 'CLEAR LEVEL ' + (maxU + 1) + ' FIRST'; col = '#ff8a7a'; }
+  else if (isCleared(i)) { const b = bestOf(i); status = b ? 'BEST ' + fmtTime(b) : 'CLEARED'; col = '#b4f5bb'; }
+  else { status = (frame >> 5) % 2 === 0 ? 'ENTER TO PLAY' : ''; col = '#8fe8ff'; }
+  if (status) text(status, W - 16, 249, 8, col, 'right');
+}
+
+function drawWipe() {
+  if (!trans) return;
+  const p = trans.dir < 0 ? trans.t / 36 : 1 - trans.t / 36;
+  if (p <= 0) return;
+  const r = Math.max(0, (1 - p) * 560);
+  ctx.fillStyle = '#141526';
+  ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.arc(hero.x, hero.y - 6, r, 0, Math.PI * 2, true); ctx.fill('evenodd');
+}
+
+function render() {
+  ctx.setTransform(S, 0, 0, S, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(land, 0, 0);
+  sparkles.forEach(([x, y], k) => { if (((frame >> 4) + k) % 6 === 0) rect(x, y, 3, 1, '#bfe3ff'); });
+  for (let s = 0; s < seen; s++) drawPath(s, 1e9);
+  if (reveal && reveal.wait <= 0) drawPath(reveal.seg, reveal.d);
+  drawTower();
+  for (let i = 0; i < N; i++) drawNode(i);
+  drawHero();
+  for (const c of clouds) drawCloud(((c.x + frame * c.s) % (W + 90)) - 60, c.y);
+  drawHUD();
+  drawWipe();
+}
+
+// ---------- Loop ----------
+let last = performance.now(), acc = 0;
+const STEP = 1000 / 60;
+function loop(now) {
+  acc += Math.min(100, now - last); last = now;
+  while (acc >= STEP) { step(); acc -= STEP; }
+  render();
+  requestAnimationFrame(loop);
+}
+render();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
