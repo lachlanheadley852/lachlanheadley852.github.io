@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lexicon of the Lodge — Degrees I &amp; II prototype</title>
+<style>:root{--bg:#0b0a0d;--ink:#e8dcc4;--dim:#9a8d76;--gold:#f2c25a;--panel:#15121a;--line:#2c2533}*{box-sizing:border-box}html,body{background:var(--bg);min-height:100%;color:var(--ink);margin:0;font-family:Georgia,Times New Roman,serif}#app{flex-direction:column;gap:10px;max-width:1100px;margin:0 auto;padding:12px;display:flex}header{flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;display:flex}h1{letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin:0;font-size:16px;font-weight:400}.tools{flex-wrap:wrap;gap:6px;display:flex}button{color:var(--ink);border:1px solid var(--line);cursor:pointer;background:#1d1823;border-radius:3px;padding:6px 10px;font-family:inherit;font-size:13px}button:hover,button.on{border-color:var(--gold);color:var(--gold)}#stage{aspect-ratio:16/9;border:1px solid var(--line);-webkit-user-select:none;user-select:none;background:#000;width:100%;position:relative;overflow:hidden}#stage svg{width:100%;height:100%;display:block;position:absolute;inset:0}#fx{pointer-events:none}#stage.casting #scene{cursor:crosshair}.nav{color:#e8dcc44d;cursor:pointer;z-index:3;justify-content:center;align-items:center;width:6%;font-size:30px;transition:color .2s,background .2s;display:flex;position:absolute;top:0;bottom:0}.nav:hover{color:var(--gold);background:#f2c25a0f}#navL{left:0}#navR{right:0}#viewName{letter-spacing:.3em;text-transform:uppercase;color:var(--dim);z-index:3;pointer-events:none;white-space:nowrap;font-size:11px;position:absolute;top:10px;left:50%;transform:translate(-50%)}.hot{cursor:pointer}.hl{fill:none;stroke:var(--gold);stroke-width:2px;stroke-dasharray:6 6;opacity:0;pointer-events:none;transition:opacity .2s}body.hints .hl{opacity:.75}.hot:hover .hl{opacity:.4}.flame{transform-box:fill-box;transform-origin:50% 100%;animation:1.6s ease-in-out infinite flick}@keyframes flick{0%,to{transform:scale(1)}30%{transform:scale(.9,1.12)}60%{transform:scale(1.05,.92)}}.wisp{animation:3s ease-in-out infinite drift}@keyframes drift{0%,to{opacity:.7;transform:translateY(0)}50%{opacity:.3;transform:translateY(-8px)}}.pulse{animation:2.4s ease-in-out infinite pulse}@keyframes pulse{0%,to{opacity:.55}50%{opacity:1}}.fall{stroke-dasharray:16 10;animation:.5s linear infinite fall}@keyframes fall{to{stroke-dashoffset:-26px}}#msg{background:var(--panel);border:1px solid var(--line);min-height:58px;padding:10px 14px;font-size:15px;line-height:1.5}#msg .w{color:var(--gold);letter-spacing:.12em}#panel{background:var(--panel);border:1px solid var(--line);grid-template-columns:1.3fr 1fr;gap:12px;padding:12px;display:grid}.label{letter-spacing:.25em;text-transform:uppercase;color:var(--dim);margin:0 0 6px;font-size:11px}.tiles{flex-wrap:wrap;gap:8px;min-height:20px;margin-bottom:10px;display:flex}.tile{text-align:left;align-items:center;gap:8px;min-width:112px;padding:6px 10px 6px 6px;display:flex}.tile svg{flex:none;width:30px;height:30px}.tile b{letter-spacing:.12em;font-size:15px;font-weight:400;display:block}.tile small{color:var(--dim);font-size:11px;display:block}.tile.sel{border-color:var(--gold);background:#2a2114}.tile.sel b{color:var(--gold)}.tile.item b{letter-spacing:.02em;font-size:14px}.tile.new b:after{content:" new";letter-spacing:.1em;color:var(--gold);vertical-align:super;font-size:9px}.empty{color:var(--dim);font-size:13px;font-style:italic}#utter{letter-spacing:.18em;flex-wrap:wrap;align-items:center;gap:8px;min-height:40px;font-size:21px;display:flex}.slot{border-bottom:1px solid var(--line);text-align:center;min-width:64px;color:var(--dim);padding:4px 8px}.slot.full{color:var(--gold);border-color:var(--gold)}.slot.opt{letter-spacing:.05em;font-size:14px}.slot.opt.full{letter-spacing:.18em;font-size:21px}.dash{color:var(--dim)}#hint{color:var(--dim);letter-spacing:0;margin-top:4px;font-size:12px}#carry{color:var(--dim);margin:10px 0;font-size:13px}#carry b{color:#cfe6ff;font-weight:400}#log{color:var(--dim);max-height:130px;margin:0;padding:0;font-size:13px;list-style:none;overflow:auto}#log li{border-bottom:1px solid #1f1a24;padding:2px 0}#log li span{color:var(--ink);letter-spacing:.1em}.overlay{z-index:10;text-align:center;background:#050407ed;justify-content:center;align-items:center;padding:24px;display:flex;position:absolute;inset:0;overflow:auto}.overlay .card{max-width:580px}.overlay h2{color:var(--gold);letter-spacing:.2em;text-transform:uppercase;margin:0 0 14px;font-size:20px;font-weight:400}.overlay p{color:var(--ink);margin:0 0 12px;font-size:15px;line-height:1.55}.overlay p.dim{color:var(--dim);font-size:13px}.overlay button{margin:8px 4px 0;padding:8px 18px;font-size:15px}#learn{z-index:8;border:1px solid var(--gold);text-align:center;pointer-events:none;opacity:0;background:#0a080ce6;min-width:240px;padding:12px 22px;transition:opacity .5s;position:absolute;bottom:8%;left:50%;transform:translate(-50%)}#learn.show{opacity:1}#learn svg{width:54px;height:54px}#learn .k{letter-spacing:.3em;color:var(--gold);font-size:28px}#learn .m{color:var(--dim);letter-spacing:.15em;text-transform:uppercase;font-size:13px}#learn .x{color:var(--ink);max-width:320px;margin-top:6px;font-size:12px}.hidden{display:none!important}@media (width<=720px){#panel{grid-template-columns:1fr}.tile{min-width:0}#msg{font-size:14px}.nav{width:10%}.overlay p{font-size:13px}}</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1 id="title">Degree I · The Apprentice</h1>
+    <div class="tools">
+      <button id="hintBtn" title="Show what can be clicked (or hold Space)">Show hotspots</button>
+      <button id="muteBtn">Sound on</button>
+      <button id="resetBtn">Restart degree</button>
+    </div>
+  </header>
+
+  <div id="stage">
+    <svg id="scene" viewBox="0 0 960 540" preserveAspectRatio="xMidYMid slice"></svg>
+    <svg id="fx" viewBox="0 0 960 540" preserveAspectRatio="xMidYMid slice">
+      <defs><filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="10"/></filter></defs>
+    </svg>
+    <div id="navL" class="nav" title="Turn left">&#8249;</div>
+    <div id="navR" class="nav" title="Turn right">&#8250;</div>
+    <div id="viewName"></div>
+    <div id="learn"></div>
+
+    <div id="intro" class="overlay"><div class="card">
+      <h2>The Lexicon of the Lodge</h2>
+      <p>London. You were led here blindfolded, through streets and down stairs you could not see. Now the blindfold is gone, and you are alone in the dark.</p>
+      <p>Click things to examine them or pick them up. To use something you carry, select it below, then click where you want to use it.</p>
+      <p class="dim">Turn with the arrows at the sides of the screen (or the arrow keys). Hold Space, or press "Show hotspots", to see what you can click. Esc puts away what you're holding.</p>
+      <button id="beginBtn">Begin</button><button id="skipBtn">Skip to Degree II</button>
+    </div></div>
+
+    <div id="ch2intro" class="overlay hidden"><div class="card">
+      <h2>Degree II · The Middle Chamber</h2>
+      <p>You climb the winding stair into the Fellowcraft's chamber. Three new roots come to you: <b>MIR</b> (water, reflection, truth), <b>RAS</b> (flame, heat) and <b>VEL</b> (memory). And three new actions: <b>MO</b> (still), <b>NE</b> (mend) and <b>KA</b> (carry).</p>
+      <p>Words can now take a third syllable, a <b>modifier</b>. <b>-ON</b> makes a word stronger. <b>-ES</b> sends it far. The modifier is optional and always comes last.</p>
+      <p class="dim">There are 108 possible words now. Each part of a word still shows in what it does.</p>
+      <button id="ch2Btn">Enter the Middle Chamber</button>
+    </div></div>
+
+    <div id="ending" class="overlay hidden"><div class="card">
+      <h2 id="endTitle">Degree I complete</h2>
+      <p id="endStats"></p>
+      <p class="dim" id="endNext"></p>
+      <button id="nextBtn">Climb the winding stair</button><button id="againBtn">Play this degree again</button>
+    </div></div>
+  </div>
+
+  <div id="msg"></div>
+
+  <div id="panel">
+    <div>
+      <p class="label">Carried</p>
+      <div class="tiles" id="inv"></div>
+      <div id="sylWrap">
+        <p class="label">Roots · what</p>
+        <div class="tiles" id="roots"></div>
+        <p class="label">Actions · what happens</p>
+        <div class="tiles" id="actions"></div>
+        <div id="modWrap"><p class="label">Modifiers · how (optional)</p><div class="tiles" id="mods"></div></div>
+      </div>
+    </div>
+    <div>
+      <div id="wordWrap">
+        <p class="label">Your word</p>
+        <div id="utter">
+          <span class="slot" id="slotR">root</span><span class="dash">–</span><span class="slot" id="slotA">action</span>
+          <span class="dash" id="dashM">–</span><span class="slot opt" id="slotM">modifier</span>
+          <button id="clearBtn" style="font-size:12px;letter-spacing:0">Clear</button>
+        </div>
+      </div>
+      <div id="hint"></div>
+      <div id="carry"></div>
+      <p class="label">Journal</p>
+      <ul id="log"></ul>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= syllables & items ================= */
+const SYL={
+  LUM:{type:'root',meaning:'light',color:'#f2c25a',freq:659,ch:1},
+  KEL:{type:'root',meaning:'stone',color:'#c8b08a',freq:131,ch:1},
+  HAL:{type:'root',meaning:'breath, voice',color:'#cfe6ff',freq:392,ch:1},
+  MIR:{type:'root',meaning:'water, truth',color:'#6fd0e2',freq:523,ch:2},
+  RAS:{type:'root',meaning:'flame, heat',color:'#ff8a3d',freq:196,ch:2},
+  VEL:{type:'root',meaning:'memory',color:'#d9b98a',freq:349,ch:2},
+  SE:{type:'action',meaning:'reveal',ch:1},
+  TU:{type:'action',meaning:'bind',ch:1},
+  PA:{type:'action',meaning:'open',ch:1},
+  MO:{type:'action',meaning:'still',ch:2},
+  NE:{type:'action',meaning:'mend',ch:2},
+  KA:{type:'action',meaning:'carry',ch:2},
+  ON:{type:'mod',meaning:'stronger',ch:2},
+  ES:{type:'mod',meaning:'far',ch:2}
+};
+const ITEMS={
+  flint:{name:'Flint',desc:'sharp, grey',icon:'<polygon points="8,22 12,8 20,6 24,16 18,24" fill="#9a958c" stroke="#cfc8bb"/>'},
+  bar:{name:'Iron bar',desc:'rusted, flat-ended',icon:'<path d="M6 24 L24 6" stroke="#8a5a34" stroke-width="4" stroke-linecap="round"/><path d="M21 5 L26 4 L25 9Z" fill="#8a5a34"/>'},
+  key:{name:'Iron key',desc:'cold, heavy',icon:'<circle cx="10" cy="15" r="5" fill="none" stroke="#b8a37a" stroke-width="2.5"/><path d="M15 15 H26 M22 15 V20 M25 15 V19" stroke="#b8a37a" stroke-width="2.5"/>'},
+  cord:{name:'Cable-tow',desc:'a coil of cord',icon:'<circle cx="15" cy="15" r="9" fill="none" stroke="#a07a45" stroke-width="2.5"/><circle cx="15" cy="15" r="5" fill="none" stroke="#a07a45" stroke-width="2.5"/><path d="M24 15 Q27 22 22 26" stroke="#a07a45" stroke-width="2.5" fill="none"/>'}
+};
+const NAMES={board:'the tracing board',altar:'the altar',candles:'the candles',pillarL:'the left pillar',pillarR:'the right pillar',
+  door:'the stone door',mouth:'the carved mouth',doorway:'the open doorway',entrance:'the bricked entrance',inscription:'the inscription',
+  sconce:'the empty sconce',alcove:'the alcove',whisper:'the carved spiral',
+  skull:'the skull',candle:'the candle',hourglass:'the hourglass',bread:'the bread and water',vitriol:'the carved letters',innerdoor:'the inner door',
+  slab:'the floor stone',bar:'the iron bar',key:'the key',book:'the book',statue:'the statue',cord:'the cord',bell:'the bell',lodgeDoor:'the great door',
+  toHall:'the doorway',toReflection:'the doorway',toLodge:'the doorway',toHall2:'the doorway',
+  veil:'the water veil',crown:'the carved crown',chasm:'the chasm',brazier:'the far brazier',inner:'the inner door',stair:'the winding stair',
+  basin:'the basin',mirrorText:'the backwards letters'};
+
+let S, word={root:null,action:null,mod:null};
+function fresh(ch){
+  return {ch,room:ch===1?'reflection':'middle',view:0,f:{},inv:[],sel:null,spoken:0,tried:new Set(),log:[],
+    known:new Set(ch===1?[]:Object.keys(SYL))};
+}
+S=fresh(1);
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const scene=$('scene'), fxSvg=$('fx');
+
+/* ================= audio ================= */
+let AC=null, muted=false;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;}}return AC;}
+function tone(freq,start,dur,type,vol,glide){
+  const c=ac(); if(!c||muted) return;
+  const t=c.currentTime+start, o=c.createOscillator(), g=c.createGain();
+  o.type=type; o.frequency.setValueAtTime(freq,t); if(glide) o.frequency.linearRampToValueAtTime(glide,t+dur);
+  g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(vol,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+dur+0.05);
+}
+function strike(r,start=0,mult=1){const f=SYL[r].freq*mult; tone(f,start,0.6,'triangle',0.22); tone(f*2,start,0.25,'sine',0.08);
+  if(r==='KEL') tone(f*1.5,start,0.3,'square',0.04); if(r==='RAS') tone(f,start,0.4,'sawtooth',0.04); if(r==='VEL') tone(f*3,start,1.2,'sine',0.05); if(r==='MIR') tone(f*1.01,start,0.8,'sine',0.08);}
+function sing(a,start=0){
+  if(a==='SE'){tone(660,start,1.1,'sine',0.1,990);tone(990,start+0.1,1.0,'sine',0.05,1320);}
+  if(a==='TU'){tone(330,start,1.0,'sine',0.12,220);tone(247,start+0.15,0.9,'triangle',0.06,196);}
+  if(a==='PA'){tone(523,start,0.9,'sine',0.1);tone(784,start+0.2,0.9,'sine',0.08);}
+  if(a==='MO'){tone(440,start,0.35,'sine',0.13);tone(660,start,0.35,'sine',0.05);}
+  if(a==='NE'){tone(392,start,0.9,'sine',0.09,440);tone(494,start,0.9,'sine',0.09,440);}
+  if(a==='KA'){tone(330,start,0.9,'sine',0.11,660);}
+}
+function modSound(m,start){ if(m==='ON'){tone(110,start,0.9,'triangle',0.15);tone(220,start,0.9,'sine',0.08);} if(m==='ES'){tone(300,start,0.45,'sawtooth',0.03,1400);} }
+function chord(){[392,494,587,784].forEach((f,i)=>tone(f,i*0.12,2.2,'sine',0.07));}
+function bell(){[0,0.9,1.8].forEach(t=>{tone(523,t,1.6,'sine',0.14);tone(1310,t,0.9,'sine',0.04);tone(784,t,1.2,'triangle',0.04);});}
+function thud(){tone(80,0,0.4,'triangle',0.25,50);tone(120,0.02,0.2,'square',0.03);}
+function pickup(){tone(880,0,0.15,'sine',0.06);tone(1175,0.07,0.18,'sine',0.05);}
+function sound(k){ if(SYL[k].type==='root') strike(k); else if(SYL[k].type==='action') sing(k); else modSound(k,0); }
+
+/* ================= drawing helpers ================= */
+function defs(){return `<defs>
+<pattern id="stone" width="120" height="60" patternUnits="userSpaceOnUse"><rect width="120" height="60" fill="#29231f"/>
+<path d="M0 1H120M0 30H120M0 59H120M40 0V30M100 0V30M10 30V60M70 30V60" stroke="#191513" stroke-width="2"/></pattern>
+<pattern id="brick" width="40" height="20" patternUnits="userSpaceOnUse"><rect width="40" height="20" fill="#221c19"/>
+<path d="M0 1H40M0 10H40M20 1V10M0 10V20M40 10V20" stroke="#120f0e" stroke-width="1.5"/></pattern>
+<pattern id="plank" width="30" height="300" patternUnits="userSpaceOnUse"><rect width="30" height="300" fill="#3a2a1e"/><path d="M1 0V300" stroke="#1f160f" stroke-width="2"/></pattern>
+<radialGradient id="vig" cx="50%" cy="45%" r="72%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".9"/></radialGradient>
+<radialGradient id="candle"><stop offset="0" stop-color="#ffcf7a" stop-opacity=".45"/><stop offset="1" stop-color="#ffcf7a" stop-opacity="0"/></radialGradient>
+<radialGradient id="warm"><stop offset="0" stop-color="#ffd98a" stop-opacity=".8"/><stop offset="1" stop-color="#ffd98a" stop-opacity="0"/></radialGradient>
+<radialGradient id="fire"><stop offset="0" stop-color="#ffb060" stop-opacity=".85"/><stop offset="1" stop-color="#ff7a30" stop-opacity="0"/></radialGradient>
+<radialGradient id="alcoveLit" cx="50%" cy="55%" r="65%"><stop offset="0" stop-color="#6b5434"/><stop offset="1" stop-color="#1c1610"/></radialGradient>
+<linearGradient id="stair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe2a0"/><stop offset="1" stop-color="#7a5524"/></linearGradient>
+<linearGradient id="dimway" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a3826"/><stop offset="1" stop-color="#15100b"/></linearGradient>
+<linearGradient id="chasmG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000"/><stop offset=".85" stop-color="#000"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>
+<linearGradient id="ice" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#cfeef5" stop-opacity=".75"/><stop offset=".5" stop-color="#7fb7c6" stop-opacity=".55"/><stop offset="1" stop-color="#cfeef5" stop-opacity=".7"/></linearGradient>
+<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<clipPath id="archClip"><path d="M378 400 V212 A102 102 0 0 1 582 212 V400Z"/></clipPath>
+</defs>`;}
+function walls(){return `<rect width="960" height="392" fill="url(#stone)"/><rect width="960" height="392" fill="#000" opacity=".35"/>`;}
+function floor(c1='#121014',c2='#5e574b'){
+  const vx=480,vy=170,top=392,bot=540,rows=6,cols=12; let s='';
+  const ys=[];for(let i=0;i<=rows;i++) ys.push(top+(bot-top)*Math.pow(i/rows,1.5));
+  const xb=j=>-520+j*(2000/cols);
+  const X=(j,y)=>vx+(xb(j)-vx)*(y-vy)/(bot-vy);
+  for(let i=0;i<rows;i++)for(let j=0;j<cols;j++){
+    const y1=ys[i],y2=ys[i+1];
+    s+=`<polygon points="${X(j,y1)},${y1} ${X(j+1,y1)},${y1} ${X(j+1,y2)},${y2} ${X(j,y2)},${y2}" fill="${(i+j)%2?c1:c2}" stroke="#141110" stroke-width="1"/>`;
+  }
+  return s+`<rect y="392" width="960" height="148" fill="#000" opacity=".35"/>`;
+}
+function plainFloor(){return floor('#26201c','#2c2520');}
+function candle(x,y){return `<circle cx="${x}" cy="${y-30}" r="80" fill="url(#candle)"/><rect x="${x-5}" y="${y-30}" width="10" height="30" fill="#d8ccb0"/><ellipse class="flame" cx="${x}" cy="${y-40}" rx="4" ry="10" fill="#ffd27a"/>`;}
+function hot(id,inner){return `<g class="hot" data-id="${id}">${inner}</g>`;}
+function vignette(){return `<rect width="960" height="540" fill="url(#vig)" pointer-events="none"/>`;}
+function dark(op){return `<rect width="960" height="540" fill="#000" opacity="${op}" pointer-events="none"/>`;}
+function pillar(x,id){return hot(id,`<rect x="${x}" y="110" width="60" height="285" fill="#3b332d" stroke="#1b1715" stroke-width="2"/>
+  <path d="M${x+15} 115V390M${x+30} 115V390M${x+45} 115V390" stroke="#2a2420" stroke-width="2"/>
+  <rect x="${x-10}" y="94" width="80" height="18" fill="#4a4038"/><rect x="${x-10}" y="392" width="80" height="14" fill="#4a4038"/>
+  <circle cx="${x+30}" cy="70" r="23" fill="#463c34" stroke="#8a7a60" stroke-width="2"/>
+  <path d="M${x+7} 70H${x+53}M${x+30} 47V93" stroke="#8a7a60" stroke-width="1" opacity=".6"/>`);}
+
+/* ================= DEGREE I · room 1: the Chamber of Reflection ================= */
+function rfNorth(){
+  const f=S.f; let s=walls()+plainFloor();
+  s+=hot('vitriol',`<rect x="320" y="125" width="320" height="50" fill="transparent"/><text x="480" y="160" text-anchor="middle" font-family="Georgia,serif" font-size="24" letter-spacing="8" fill="#a8977a">V·I·T·R·I·O·L</text>`);
+  s+=`<rect x="300" y="300" width="400" height="14" fill="#3a2e24"/><rect x="315" y="314" width="14" height="84" fill="#2a2018"/><rect x="671" y="314" width="14" height="84" fill="#2a2018"/>`;
+  let sk=`<ellipse cx="390" cy="272" rx="24" ry="21" fill="#cfc4a8"/><rect x="378" y="284" width="24" height="16" rx="4" fill="#bfb497"/><ellipse cx="381" cy="272" rx="6" ry="7" fill="#1a1512"/><ellipse cx="399" cy="272" rx="6" ry="7" fill="#1a1512"/><path d="M380 292 H400 M384 288 V296 M390 288 V296 M396 288 V296" stroke="#6b6250" stroke-width="1.5"/>`;
+  if(!f.flint) sk+=`<path d="M388 292 L392 289 L395 293 L391 296Z" fill="#e8e4dc" class="pulse"/>`;
+  s+=hot('skull',sk);
+  let c=`<ellipse cx="480" cy="300" rx="20" ry="5" fill="#2a2420" stroke="#5a4c40"/><rect x="475" y="268" width="10" height="32" fill="#d8ccb0"/><path d="M480 268 V262" stroke="#1a1512" stroke-width="1.5"/>`;
+  if(f.lit) c=`<circle cx="480" cy="240" r="260" fill="url(#candle)"/>`+c+`<ellipse class="flame" cx="480" cy="254" rx="5" ry="12" fill="#ffd27a"/>`;
+  s+=hot('candle',c);
+  s+=hot('hourglass',`<rect x="565" y="252" width="34" height="6" fill="#4a3a2a"/><rect x="565" y="294" width="34" height="6" fill="#4a3a2a"/><path d="M570 258 L594 258 L582 276 L594 294 L570 294 L582 276Z" fill="#8fa3a8" opacity=".5" stroke="#c9d5d8"/><path d="M574 292 L590 292 L582 284Z" fill="#c9a86a"/>`);
+  s+=hot('bread',`<path d="M622 300 Q640 280 660 300Z" fill="#8a6a3e"/><ellipse cx="676" cy="296" rx="14" ry="5" fill="#3a3530"/><ellipse cx="676" cy="294" rx="11" ry="3" fill="#2f5560"/>`);
+  if(!f.lit) s+=dark(.8);
+  return s;
+}
+function rfEast(){
+  const f=S.f; let s=walls()+plainFloor();
+  if(f.open1){
+    s+=hot('toHall',`<rect x="400" y="170" width="160" height="228" fill="url(#stair)" opacity=".85"/><circle cx="480" cy="300" r="140" fill="url(#warm)" opacity=".5"/>`);
+    s+=`<polygon points="400,170 340,190 340,410 400,398" fill="url(#plank)" stroke="#1f160f" stroke-width="2"/>`;
+  } else {
+    s+=hot('innerdoor',`<rect x="400" y="170" width="160" height="228" fill="url(#plank)" stroke="#1f160f" stroke-width="3"/>
+      <rect x="400" y="200" width="160" height="10" fill="#1d1a18"/><rect x="400" y="350" width="160" height="10" fill="#1d1a18"/>
+      <rect x="525" y="270" width="22" height="34" fill="#2a2622" stroke="#5a4c40"/><circle cx="536" cy="282" r="3.5" fill="#000"/><rect x="534.5" y="283" width="3" height="10" fill="#000"/>`);
+    s+=`<rect x="400" y="396" width="160" height="4" fill="#ffcf7a" opacity=".8"/>`;
+  }
+  s+=`<rect x="392" y="162" width="176" height="238" fill="none" stroke="#3b332d" stroke-width="10"/>`;
+  if(!f.lit){ s+=dark(.82); if(!f.open1) s+=`<rect x="400" y="396" width="160" height="4" fill="#ffcf7a" opacity=".9"/><ellipse cx="480" cy="410" rx="120" ry="14" fill="#ffcf7a" opacity=".12"/>`; }
+  return s;
+}
+function rfSouth(){
+  const f=S.f; let s=walls()+plainFloor();
+  s+=hot('inscription',`<rect x="300" y="115" width="360" height="40" fill="transparent"/><text x="480" y="142" text-anchor="middle" font-family="Georgia,serif" font-size="17" letter-spacing="4" fill="#a8977a">NONE RETURN THE WAY THEY CAME</text>`);
+  s+=hot('entrance',`<path d="M400 400 V255 A80 80 0 0 1 560 255 V400Z" fill="url(#brick)" stroke="#4d4238" stroke-width="7"/><path d="M405 300 H555 M410 340 H550" stroke="#6b5f52" stroke-width="1" opacity=".5"/>`);
+  if(!f.lit) s+=dark(.82);
+  return s;
+}
+function rfWest(){
+  const f=S.f; let s=walls()+plainFloor();
+  s+=`<rect x="300" y="190" width="120" height="90" fill="#1a1512" stroke="#3b332d" stroke-width="6"/><path d="M330 260 Q345 215 360 240 Q375 205 390 260" stroke="#6b5f52" fill="none" stroke-width="2" opacity=".6"/>`;
+  if(f.slab){
+    s+=hot('slab',`<polygon points="420,440 540,440 560,490 400,490" fill="#050404" stroke="#3a332c" stroke-width="2"/><polygon points="575,445 690,445 712,494 555,494" fill="#3a332c" stroke="#1b1715" stroke-width="2"/><rect x="615" y="456" width="50" height="26" fill="none" stroke="#5a4c40"/>`);
+    if(!f.keyTaken) s+=hot('key',`<rect x="455" y="452" width="50" height="30" fill="transparent"/><circle cx="470" cy="467" r="6" fill="none" stroke="#b8a37a" stroke-width="2.5"/><path d="M476 467 H496 M490 467 V473 M494 467 V472" stroke="#b8a37a" stroke-width="2.5"/>`);
+  } else {
+    s+=hot('slab',`<polygon points="420,440 540,440 560,490 400,490" fill="#3a332c" stroke="#5a4c40" stroke-width="2"/><polygon points="455,452 505,452 513,478 447,478" fill="none" stroke="#7a6b58" stroke-width="2"/>`);
+  }
+  if(f.lit&&!f.barTaken) s+=hot('bar',`<rect x="690" y="240" width="60" height="160" fill="transparent"/><path d="M705 398 L738 250" stroke="#6b3f22" stroke-width="7" stroke-linecap="round"/><path d="M734 246 L744 240 L742 254Z" fill="#6b3f22"/>`);
+  if(!f.lit) s+=dark(.82);
+  return s;
+}
+
+/* ================= DEGREE I · room 2: the Hall of Instruction ================= */
+function hlNorth(){
+  const f=S.f; let s=walls()+floor();
+  if(f.rung){
+    s+=hot('toLodge',`<rect x="390" y="130" width="180" height="265" fill="url(#stair)"/><circle cx="480" cy="270" r="160" fill="url(#warm)" opacity=".55"/>`);
+    s+=`<rect x="384" y="124" width="192" height="276" fill="none" stroke="#4a3f36" stroke-width="10"/>`;
+  } else {
+    s+=hot('lodgeDoor',`<rect x="390" y="130" width="180" height="265" fill="url(#plank)" stroke="#1f160f" stroke-width="3"/><path d="M480 130 V395" stroke="#1f160f" stroke-width="4"/>
+      <g stroke="#b89a5a" stroke-width="3" fill="none" opacity=".8"><path d="M480 196 L452 266 M480 196 L508 266"/><path d="M452 248 L480 276 L508 248"/><circle cx="480" cy="196" r="4"/></g>`);
+    s+=`<rect x="384" y="124" width="192" height="276" fill="none" stroke="#4a3f36" stroke-width="10"/>`;
+  }
+  let lect=`<rect x="232" y="300" width="16" height="95" fill="#3a2a1e"/><rect x="214" y="390" width="52" height="8" fill="#2a2018"/><polygon points="196,300 284,300 292,284 188,284" fill="#3a2a1e" stroke="#1f160f"/>`;
+  if(f.dust) lect+=`<path d="M200 282 Q240 268 240 282 Q240 268 280 282 L276 270 Q240 256 240 270 Q240 256 204 270Z" fill="#d8ccb0" stroke="#8a7a60"/><path d="M212 274 H232 M248 274 H268 M214 278 H232" stroke="#6b5f52" stroke-width="1"/>`;
+  else lect+=`<rect x="205" y="268" width="70" height="16" fill="#6d655a" stroke="#4a443c"/><g fill="#9a938a" opacity=".6"><circle cx="220" cy="270" r="2"/><circle cx="245" cy="272" r="1.5"/><circle cx="262" cy="269" r="2"/></g>`;
+  s+=hot('book',lect);
+  s+=candle(660,395)+`<rect x="654" y="365" width="12" height="30" fill="#2d2622"/>`;
+  return s;
+}
+function hlEast(){
+  const f=S.f; let s=walls()+floor();
+  let st=`<rect x="420" y="340" width="120" height="55" fill="#3b332d" stroke="#1b1715" stroke-width="2"/>`;
+  if(f.veil){
+    st+=`<circle cx="480" cy="180" r="20" fill="#6b6359"/><polygon points="452,202 508,202 528,340 432,340" fill="#5d564d"/><path d="M462 230 Q480 250 498 230" stroke="#4a443c" stroke-width="6" fill="none"/>`;
+    st+=`<circle cx="474" cy="176" r="2" fill="#2a2420"/><circle cx="486" cy="176" r="2" fill="#2a2420"/>`;
+  } else {
+    st+=`<path d="M455 340 Q440 250 462 190 Q470 150 480 152 Q490 150 498 190 Q520 250 505 340Z" fill="#141014" stroke="#2a2430"/><path d="M468 200 Q465 270 470 338 M492 200 Q497 270 490 338" stroke="#2a2430" fill="none"/>`;
+  }
+  s+=hot('statue',st);
+  if(f.veil&&!f.cordTaken) s+=hot('cord',`<circle cx="480" cy="258" r="16" fill="none" stroke="#a07a45" stroke-width="3"/><circle cx="480" cy="258" r="10" fill="none" stroke="#a07a45" stroke-width="3"/><circle cx="480" cy="258" r="4" fill="none" stroke="#a07a45" stroke-width="3"/>`);
+  return s+candle(330,395)+candle(630,395);
+}
+function hlWest(){
+  const f=S.f; let s=walls()+floor();
+  let b=`<path d="M380 110 H480 V132" stroke="#1a1614" stroke-width="7" fill="none"/><path d="M450 200 Q450 140 480 135 Q510 140 510 200 L522 212 H438Z" fill="#8a7346" stroke="#5a4a2a" stroke-width="2"/><circle cx="480" cy="214" r="6" fill="#5a4a2a"/>`;
+  b+=`<path d="M480 214 V240" stroke="#a07a45" stroke-width="4"/><path d="M476 240 L484 244 L478 248" stroke="#a07a45" stroke-width="2" fill="none"/>`;
+  if(f.tied) b+=`<circle cx="480" cy="246" r="5" fill="#a07a45"/><path d="M480 246 Q486 310 480 380" stroke="#a07a45" stroke-width="4" fill="none"/>`;
+  else b+=`<rect x="440" y="130" width="80" height="120" fill="transparent"/>`;
+  s+=hot('bell',b);
+  s+=`<rect x="560" y="360" width="110" height="18" fill="#3a2a1e"/><rect x="566" y="378" width="10" height="20" fill="#2a2018"/><rect x="654" y="378" width="10" height="20" fill="#2a2018"/>`;
+  return s+candle(300,395);
+}
+function hlSouth(){
+  let s=walls()+floor();
+  s+=hot('toReflection',`<rect x="400" y="170" width="160" height="228" fill="url(#dimway)"/><circle cx="480" cy="300" r="60" fill="url(#candle)"/>`);
+  s+=`<rect x="392" y="162" width="176" height="238" fill="none" stroke="#3b332d" stroke-width="10"/><polygon points="400,170 340,190 340,410 400,398" fill="url(#plank)" stroke="#1f160f" stroke-width="2"/>`;
+  return s+candle(300,395)+candle(660,395);
+}
+
+/* ================= DEGREE I · room 3: the Apprentice's Chamber ================= */
+function c1North(){
+  const f=S.f; let s=walls()+floor()+pillar(170,'pillarL')+pillar(730,'pillarR');
+  let board=`<rect x="370" y="105" width="220" height="155" fill="#33281d" stroke="#8a6b3a" stroke-width="5"/><rect x="384" y="119" width="192" height="127" fill="#2a2018"/>`;
+  if(f.board){
+    board+=`<g filter="url(#glow)" fill="#f2c25a" font-family="Georgia,serif" font-size="12" letter-spacing="2" text-anchor="middle">
+      <text x="480" y="150">LIGHT WHERE</text><text x="480" y="166">THERE IS NONE</text>
+      <text x="480" y="192">HEAR WHAT</text><text x="480" y="208">WAS LEFT</text>
+      <text x="480" y="232">GIVE THE STONE ITS VOICE</text></g>`;
+  } else board+=`<g stroke="#c9a86a" fill="none" opacity=".1"><rect x="455" y="140" width="50" height="50"/><circle cx="480" cy="165" r="38"/><path d="M400 225H560"/></g>`;
+  s+=hot('board',board);
+  s+=hot('altar',`<rect x="380" y="300" width="200" height="95" fill="#3a312a"/><rect x="365" y="290" width="230" height="14" fill="#4b4037"/>
+    <g stroke="#8a7a60" fill="none" opacity=".35">${[0,1,2].map(i=>`<rect x="${405+i*30}" y="330" width="16" height="16"/>`).join('')}${[0,1,2].map(i=>`<circle cx="${503+i*30}" cy="338" r="8"/>`).join('')}</g>`);
+  s+=hot('candles',candle(405,290)+candle(555,290));
+  return s;
+}
+function c1East(){
+  const f=S.f; let s=walls()+floor();
+  s+=`<rect x="262" y="330" width="16" height="65" fill="#2d2622"/><rect x="682" y="330" width="16" height="65" fill="#2d2622"/>`+candle(270,330)+candle(690,330);
+  const arch="M330 400 V210 A150 150 0 0 1 630 210 V400 Z";
+  if(f.door){
+    let st=`<path d="${arch}" fill="url(#stair)"/>`;
+    for(let i=0;i<6;i++) st+=`<path d="M${350+i*8} ${395-i*30}H${610-i*8}" stroke="#8a6230" stroke-width="2" opacity=".6"/>`;
+    st+=`<circle cx="480" cy="230" r="160" fill="url(#warm)" opacity=".6"/>`;
+    s+=hot('doorway',st)+`<path d="${arch}" fill="none" stroke="#6f6152" stroke-width="8"/>`;
+  } else {
+    s+=hot('door',`<path d="${arch}" fill="#332b26" stroke="#6f6152" stroke-width="8"/>
+      <g stroke="#1e1915" stroke-width="2" fill="none"><path d="M330 300H630M330 350H630M333 250H627M480 70V230M480 280V400M405 250V300M555 250V300M405 350V400M555 350V400M380 300V350M580 300V350"/></g>`);
+    let m=`<ellipse cx="480" cy="255" rx="46" ry="20" fill="#0e0b0a"/><path d="M434 255 Q480 228 526 255 M434 255 Q480 282 526 255" stroke="#5a4c40" stroke-width="4" fill="none"/>`;
+    if(!f.seal){
+      m+=`<circle class="pulse" cx="480" cy="255" r="72" fill="none" stroke="#b89a5a" stroke-width="3" stroke-dasharray="10 8"/>`;
+      for(let i=0;i<8;i++){const a=i*Math.PI/4, x=480+84*Math.cos(a), y=255+84*Math.sin(a); m+=`<rect x="${x-5}" y="${y-5}" width="10" height="10" fill="none" stroke="#b89a5a" stroke-width="1.5" transform="rotate(45 ${x} ${y})"/>`;}
+    } else m+=`<g stroke="#5a4c40" stroke-width="2" opacity=".7"><path d="M400 230 L420 236M560 280 L540 274M470 175 L474 190M492 330 L488 316"/></g>`;
+    s+=hot('mouth',m);
+  }
+  return s;
+}
+function c1South(){
+  let s=walls()+floor();
+  s+=hot('toHall2',`<path d="M400 400 V255 A80 80 0 0 1 560 255 V400Z" fill="url(#dimway)" stroke="#4d4238" stroke-width="7"/><circle cx="480" cy="330" r="50" fill="url(#candle)"/>`);
+  return s+candle(330,395)+candle(630,395);
+}
+function c1West(){
+  const f=S.f; let s=walls()+floor();
+  s+=`<path d="M350 400 V225 A130 130 0 0 1 610 225 V400Z" fill="#3b332d" stroke="#1b1715" stroke-width="2"/>`;
+  s+=hot('alcove',`<path d="M372 400 V228 A108 108 0 0 1 588 228 V400Z" fill="${f.sconce?'url(#alcoveLit)':'#040303'}"/>`);
+  if(f.sconce){
+    let d=''; for(let t=0;t<=6*Math.PI;t+=0.15){const r=3+3*t; d+=(t?'L':'M')+(480+r*Math.cos(t)).toFixed(1)+' '+(285+r*Math.sin(t)).toFixed(1);}
+    const taken=f.breath||f.seal;
+    let w=`<circle cx="480" cy="285" r="62" fill="transparent"/><path d="${d}" fill="none" stroke="#c9b48a" stroke-width="3" opacity="${taken?.35:.85}"/>`;
+    if(f.whisper&&!taken) w+=`<g class="wisp" stroke="#cfe6ff" stroke-width="2" fill="none" opacity=".7"><path d="M450 240 q10 -20 0 -40 q-10 -20 5 -35"/><path d="M500 236 q-8 -18 4 -36 q10 -16 0 -34"/></g>`;
+    s+=hot('whisper',w);
+  }
+  let sc=`<path d="M262 250 H292 V232" stroke="#1a1614" stroke-width="7" fill="none"/><path d="M276 232 H308 L300 214 H284 Z" fill="#2a2420" stroke="#5a4c40" stroke-width="2"/>`;
+  if(f.sconce) sc=`<circle cx="292" cy="205" r="110" fill="url(#warm)"/>`+sc+`<circle class="pulse" cx="292" cy="205" r="11" fill="#ffe08a" filter="url(#glow)"/>`;
+  else sc+=`<rect x="250" y="190" width="70" height="70" fill="transparent"/>`;
+  s+=hot('sconce',sc);
+  if(!f.sconce) s+=dark(.25);
+  return s;
+}
+
+/* ================= DEGREE II views ================= */
+function crownShape(x,y,tilt){return `<g transform="rotate(${tilt} ${x} ${y})"><rect x="${x-38}" y="${y-8}" width="76" height="16" fill="#4a4038" stroke="#1b1715"/><circle cx="${x}" cy="${y-30}" r="22" fill="#463c34" stroke="#8a7a60" stroke-width="2"/><path d="M${x-22} ${y-30}H${x+22}M${x} ${y-52}V${y-8}" stroke="#8a7a60" opacity=".6"/></g>`;}
+function c2North(){
+  const f=S.f; let s=walls()+floor()+pillar(170,'pillarL');
+  if(f.pillar) s+=pillar(730,'pillarR');
+  else s+=hot('pillarR',`<rect x="730" y="250" width="60" height="145" fill="#3b332d" stroke="#1b1715" stroke-width="2"/><polygon points="730,250 742,238 752,252 766,232 778,247 790,240 790,252 730,252" fill="#3b332d" stroke="#1b1715"/><path d="M745 255V390M760 255V390M775 255V390" stroke="#2a2420" stroke-width="2"/><rect x="720" y="392" width="80" height="14" fill="#4a4038"/>`);
+  if(f.crownHere&&!f.pillar) s+=hot('crown',crownShape(845,385,-18));
+  s+=`<path d="M360 400 V210 A120 120 0 0 1 600 210 V400Z" fill="#3b332d" stroke="#6f6152" stroke-width="6"/><rect x="370" y="398" width="220" height="14" fill="#1d2a2e"/>`;
+  if(f.veilOpen){
+    s+=`<path d="M378 400 V212 A102 102 0 0 1 582 212 V400Z" fill="#0b0908"/><g clip-path="url(#archClip)"><rect x="378" y="100" width="22" height="300" fill="url(#ice)"/><rect x="560" y="100" width="22" height="300" fill="url(#ice)"/></g>`;
+    if(f.pillar) s+=hot('doorway',`<rect x="440" y="250" width="80" height="145" fill="url(#stair)"/><circle cx="480" cy="300" r="110" fill="url(#warm)" opacity=".7"/>`);
+    else s+=hot('inner',`<rect x="440" y="250" width="80" height="145" fill="#3a2f27" stroke="#5a4c40" stroke-width="3"/><rect x="424" y="270" width="10" height="125" fill="none" stroke="#5a4c40" stroke-dasharray="4 4"/><rect x="526" y="270" width="10" height="125" fill="none" stroke="#5a4c40" stroke-dasharray="4 4"/>`);
+  } else if(f.veilStill){
+    s+=hot('veil',`<path d="M378 400 V212 A102 102 0 0 1 582 212 V400Z" fill="url(#ice)"/><g stroke="#ffffff" opacity=".5" stroke-width="1.5"><path d="M400 380 L450 300 L430 240M520 390 L540 320 L500 260 L520 200M470 330 L490 280"/></g>`);
+  } else {
+    let lines=''; for(let x=384;x<580;x+=9) lines+=`<path class="fall" d="M${x} 100 V400" stroke="#9fd7e4" stroke-width="2" opacity="${0.35+((x*7)%5)/10}" style="animation-delay:-${(x%13)/26}s"/>`;
+    s+=hot('veil',`<path d="M378 400 V212 A102 102 0 0 1 582 212 V400Z" fill="#244d59" opacity=".85"/><g clip-path="url(#archClip)">${lines}</g>`);
+  }
+  return s;
+}
+function c2East(){
+  const f=S.f; let s=walls();
+  s+=`<rect x="0" y="330" width="960" height="34" fill="#3b332d"/><path d="M0 330H960" stroke="#5a4c40" stroke-width="2"/>`;
+  s+=floor();
+  s+=hot('chasm',`<rect x="0" y="362" width="960" height="108" fill="url(#chasmG)"/><path d="M0 470 L120 466 L240 472 L380 465 L520 471 L660 466 L800 472 L960 467" stroke="#5e574b" stroke-width="3" fill="none"/>`);
+  let br=`<path d="M670 330 L680 290 M710 330 L700 290 M690 330 V290" stroke="#2a2420" stroke-width="4"/><path d="M655 290 Q690 315 725 290 Z" fill="#2d2622" stroke="#5a4c40" stroke-width="2"/>`;
+  if(f.brazier) br=`<circle cx="690" cy="270" r="200" fill="url(#fire)"/>`+br+`<ellipse class="flame" cx="690" cy="272" rx="14" ry="26" fill="#ff9a40"/><ellipse class="flame" cx="680" cy="278" rx="8" ry="16" fill="#ffd27a" style="animation-delay:-.5s"/><ellipse class="flame" cx="701" cy="279" rx="7" ry="14" fill="#ffd27a" style="animation-delay:-1s"/>`;
+  else br+=`<rect x="645" y="270" width="90" height="62" fill="transparent"/>`;
+  s+=hot('brazier',br);
+  if(f.brazier&&!f.crownHere) s+=hot('crown',crownShape(300,322,12));
+  if(!f.brazier) s+=`<rect width="960" height="365" fill="#000" opacity=".6" pointer-events="none"/>`;
+  return s;
+}
+function c2South(){
+  let s=walls()+floor();
+  s+=hot('inscription',`<rect x="190" y="105" width="580" height="44" fill="transparent"/><text x="480" y="134" text-anchor="middle" font-family="Georgia,serif" font-size="15" letter-spacing="3" fill="#a8977a">THE FELLOWCRAFT LEARNS TO CARRY, TO MEND, AND TO STILL</text>`);
+  let st=`<ellipse cx="480" cy="420" rx="150" ry="55" fill="#080607"/>`;
+  for(let i=0;i<6;i++){const a=-Math.PI+i*0.45; st+=`<path d="M480 420 L${480+150*Math.cos(a)} ${420+55*Math.sin(a)}" stroke="#4a4038" stroke-width="3"/>`;}
+  st+=`<circle cx="480" cy="420" r="14" fill="#3b332d"/><path d="M330 420 A150 55 0 0 1 630 420" stroke="#5e574b" stroke-width="4" fill="none"/>`;
+  s+=hot('stair',st);
+  return s+candle(300,395)+candle(660,395);
+}
+function c2West(){
+  const f=S.f; let s=walls()+floor();
+  s+=hot('mirrorText',`<rect x="250" y="120" width="460" height="44" fill="transparent"/><text transform="translate(960,0) scale(-1,1)" x="480" y="150" text-anchor="middle" font-family="Georgia,serif" font-size="20" letter-spacing="4" fill="#a8977a">STILL THE WATER, THEN PART IT</text>`);
+  let b=`<rect x="455" y="300" width="50" height="95" fill="#3b332d"/><rect x="435" y="388" width="90" height="12" fill="#4a4038"/><path d="M400 280 Q480 330 560 280 Z" fill="#3b332d" stroke="#5a4c40" stroke-width="2"/><ellipse cx="480" cy="282" rx="78" ry="12" fill="${f.read?'#6fd0e2':'#2f6170'}" opacity="${f.read?.8:1}"/>`;
+  if(f.read) b+=`<text x="480" y="286" text-anchor="middle" font-family="Georgia,serif" font-size="8" letter-spacing="1" fill="#0d2a33">STILL THE WATER, THEN PART IT</text>`;
+  s+=hot('basin',b);
+  return s+candle(320,395)+candle(640,395);
+}
+
+const DIRS=['North','East','South','West'];
+const ROOMS={
+  reflection:{name:'The Chamber of Reflection',fn:[rfNorth,rfEast,rfSouth,rfWest]},
+  hall:{name:'The Hall of Instruction',fn:[hlNorth,hlEast,hlSouth,hlWest]},
+  apprentice:{name:"The Apprentice's Chamber",fn:[c1North,c1East,c1South,c1West]},
+  middle:{name:'The Middle Chamber',fn:[c2North,c2East,c2South,c2West]}
+};
+const CH={
+  1:{title:'Degree I · The Apprentice',total:9,start:'The blindfold is gone. You are alone in a small, dark room. Behind you, the door you were led through has already been bricked shut. A thin line of light shows under a door to the east.'},
+  2:{title:'Degree II · The Fellowcraft',total:108,start:'You stand at the top of the winding stair. Ahead, a curtain of water falls across an arch, between one whole pillar and one broken one.'}
+};
+
+function render(){
+  scene.innerHTML=defs()+ROOMS[S.room].fn[S.view]()+vignette();
+  scene.querySelectorAll('.hot').forEach(g=>{
+    try{const b=g.getBBox(); const r=document.createElementNS(NS,'rect');
+      r.setAttribute('class','hl'); r.setAttribute('x',b.x-6); r.setAttribute('y',b.y-6); r.setAttribute('width',b.width+12); r.setAttribute('height',b.height+12); r.setAttribute('rx',6); g.appendChild(r);}catch(e){}
+  });
+  $('viewName').textContent=ROOMS[S.room].name+' · '+DIRS[S.view];
+  $('title').textContent=CH[S.ch].title;
+  renderWord(); renderInv();
+  $('carry').innerHTML=S.f.breath?'Holding in your breath: <b>a knot of old breath, carrying someone else\'s voice</b>':'';
+  $('log').innerHTML=S.log.slice(-12).reverse().map(l=>`<li>${l}</li>`).join('');
+}
+function addLog(html){S.log.push(html); if(S.log.length>80) S.log.shift();}
+
+/* ================= inventory ================= */
+function itemIcon(k){return `<svg viewBox="0 0 30 30">${ITEMS[k].icon}</svg>`;}
+function renderInv(){
+  const box=$('inv');
+  if(!S.inv.length){box.innerHTML='<span class="empty">Nothing yet.</span>';}
+  else{
+    box.innerHTML='';
+    S.inv.forEach(k=>{const b=document.createElement('button'); b.className='tile item'+(S.sel===k?' sel':'');
+      b.innerHTML=itemIcon(k)+`<span><b>${ITEMS[k].name}</b><small>${ITEMS[k].desc}</small></span>`;
+      b.onclick=()=>selectItem(k); box.appendChild(b);});
+  }
+  $('stage').classList.toggle('casting',!!S.sel||!!(word.root&&word.action));
+}
+function selectItem(k){
+  S.sel=S.sel===k?null:k; word={root:null,action:null,mod:null};
+  if(S.sel) say(`You hold the ${ITEMS[k].name.toLowerCase()}. Click on something to use it there.`);
+  renderWord(); renderInv();
+}
+function give(k){ if(!S.inv.includes(k)){S.inv.push(k); pickup();} }
+function takeAway(k){ S.inv=S.inv.filter(i=>i!==k); if(S.sel===k) S.sel=null; }
+
+/* ================= grimoire ================= */
+function sigil(k){
+  const T=SYL[k].type, c=T==='root'?'#c9a86a':T==='action'?'#9fb6cf':'#c79fd0';
+  const inner={LUM:'<circle cx="15" cy="15" r="5" fill="#f2c25a"/>',KEL:'<rect x="10" y="10" width="10" height="10" fill="none" stroke="#c8b08a" stroke-width="2"/>',
+    HAL:'<path d="M8 17 q3.5 -6 7 0 t7 0" stroke="#cfe6ff" stroke-width="2" fill="none"/>',
+    MIR:'<path d="M8 13 q3.5 -4 7 0 t7 0 M8 18 q3.5 -4 7 0 t7 0" stroke="#6fd0e2" stroke-width="1.6" fill="none"/>',
+    RAS:'<path d="M15 7 C21 13 19 22 15 22 C11 22 9 15 15 7Z" fill="#ff8a3d"/>',
+    VEL:'<circle cx="15" cy="15" r="6" fill="none" stroke="#d9b98a" stroke-width="1.6"/><path d="M15 11 V15 L18 17" stroke="#d9b98a" stroke-width="1.6" fill="none"/>',
+    SE:'<circle cx="15" cy="15" r="3" fill="#9fb6cf"/><path d="M7 15 Q15 7 23 15 Q15 23 7 15" stroke="#9fb6cf" fill="none" stroke-width="1.5"/>',
+    TU:'<path d="M9 9 L21 21 M21 9 L9 21" stroke="#9fb6cf" stroke-width="2"/>',PA:'<path d="M13 7 V23 M17 7 V23" stroke="#9fb6cf" stroke-width="2"/>',
+    MO:'<path d="M15 7V23M8 11L22 19M22 11L8 19" stroke="#9fb6cf" stroke-width="1.6"/>',
+    NE:'<path d="M8 15 Q11 9 14 15 M22 15 Q19 21 16 15" stroke="#9fb6cf" stroke-width="2" fill="none"/>',
+    KA:'<path d="M8 15H21M17 11L21 15L17 19" stroke="#9fb6cf" stroke-width="2" fill="none"/>',
+    ON:'<path d="M10 13 L15 8 L20 13 M10 19 L15 14 L20 19" stroke="#c79fd0" stroke-width="2" fill="none"/>',
+    ES:'<path d="M9 21 L21 9 M14 9 H21 V16" stroke="#c79fd0" stroke-width="2" fill="none"/>'}[k];
+  const frame=T==='root'?`<rect x="3" y="3" width="24" height="24" fill="none" stroke="${c}" stroke-width="2"/>`:T==='action'?`<circle cx="15" cy="15" r="12" fill="none" stroke="${c}" stroke-width="2"/>`:`<path d="M15 2 L28 15 L15 28 L2 15Z" fill="none" stroke="${c}" stroke-width="1.5"/>`;
+  return `<svg viewBox="0 0 30 30">${frame}${inner}</svg>`;
+}
+function buildTiles(){
+  ['roots','actions','mods'].forEach(box=>$(box).innerHTML='');
+  Object.keys(SYL).forEach(k=>{
+    if(!S.known.has(k)) return;
+    const b=document.createElement('button'); b.className='tile'+(S.ch===2&&SYL[k].ch===2?' new':''); b.dataset.k=k;
+    const label=SYL[k].type==='mod'?'-'+k:k;
+    b.innerHTML=sigil(k)+`<span><b>${label}</b><small>${SYL[k].meaning}</small></span>`;
+    b.onclick=()=>pick(k);
+    $({root:'roots',action:'actions',mod:'mods'}[SYL[k].type]).appendChild(b);
+  });
+  const any=S.known.size>0, hasMods=[...S.known].some(k=>SYL[k].type==='mod');
+  $('sylWrap').classList.toggle('hidden',!any); $('wordWrap').classList.toggle('hidden',!any);
+  $('modWrap').classList.toggle('hidden',!hasMods); $('slotM').classList.toggle('hidden',!hasMods); $('dashM').classList.toggle('hidden',!hasMods);
+}
+function pick(k){
+  const t=SYL[k].type;
+  S.sel=null;
+  word[t]=word[t]===k?null:k;
+  if(word[t]) sound(k);
+  renderWord(); renderInv();
+}
+function clearWord(){word={root:null,action:null,mod:null};renderWord();}
+function wordText(r,a,m){return r+'-'+a+(m?'-'+m:'');}
+function renderWord(){
+  document.querySelectorAll('#sylWrap .tile').forEach(b=>b.classList.toggle('sel',[word.root,word.action,word.mod].includes(b.dataset.k)));
+  $('slotR').textContent=word.root||'root'; $('slotR').classList.toggle('full',!!word.root);
+  $('slotA').textContent=word.action||'action'; $('slotA').classList.toggle('full',!!word.action);
+  $('slotM').textContent=word.mod?word.mod:'modifier'; $('slotM').classList.toggle('full',!!word.mod);
+  const ready=word.root&&word.action;
+  $('stage').classList.toggle('casting',!!ready||!!S.sel);
+  const hasR=[...S.known].some(k=>SYL[k].type==='root'), hasA=[...S.known].some(k=>SYL[k].type==='action');
+  let h;
+  if(!S.known.size) h='Click things to examine or take them. Select something you carry, then click where to use it.';
+  else if(!(hasR&&hasA)) h='A word needs a root and an action. You do not know both kinds yet.';
+  else if(ready) h='Now click something to speak the word at it.';
+  else if(word.root||word.action||word.mod) h='Finish the word: it needs a '+(!word.root?'root':'action')+'.';
+  else h='Choose a root and an action to form a word'+([...S.known].some(k=>SYL[k].type==='mod')?' (and a modifier if you like)':'')+'. Or use something you carry.';
+  $('hint').textContent=h;
+}
+let learnTimer=null;
+function learn(k,extra){
+  if(S.known.has(k)) return;
+  S.known.add(k); buildTiles();
+  setTimeout(()=>sound(k),300);
+  const first=S.known.size===1;
+  $('learn').innerHTML=`${sigil(k)}<div class="k">${k}</div><div class="m">${SYL[k].meaning} · a new ${SYL[k].type==='root'?'root':'action'}</div>`+
+    (first?'<div class="x">A grimoire has opened below. Syllables you learn are kept there. A root and an action together make a word you can speak.</div>':extra?`<div class="x">${extra}</div>`:'');
+  $('learn').classList.add('show');
+  clearTimeout(learnTimer); learnTimer=setTimeout(()=>$('learn').classList.remove('show'),first?6000:3800);
+  addLog(`Learned <span>${k}</span> (${SYL[k].meaning})`);
+}
+
+/* ================= effects ================= */
+function mk(tag,attrs){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+function anim(e,frames,opts){e.style.transformBox='fill-box';e.style.transformOrigin='center';try{e.animate(frames,Object.assign({fill:'forwards',easing:'ease-out'},opts));}catch(err){}}
+function fxCore(g,r,a,p,d,k){
+  const col=SYL[r].color;
+  const glow=mk('circle',{cx:p.x,cy:p.y,r:70*k,fill:col,filter:'url(#blur)',opacity:0}); g.appendChild(glow);
+  anim(glow,[{transform:'scale(.2)',opacity:.9},{transform:'scale(1.6)',opacity:0}],{duration:900,delay:d});
+  for(let i=0;i<14;i++){
+    let e, dx=(Math.random()-.5)*160*k, dy;
+    if(r==='LUM'){e=mk('circle',{cx:p.x,cy:p.y,r:2+Math.random()*2,fill:col});dy=-60-Math.random()*120;}
+    else if(r==='KEL'){e=mk('rect',{x:p.x,y:p.y,width:4,height:4,fill:col});dy=40+Math.random()*100;}
+    else if(r==='HAL'){e=mk('path',{d:`M${p.x} ${p.y} q6 -10 0 -20 q-6 -10 0 -20`,stroke:col,'stroke-width':1.5,fill:'none'});dy=-40-Math.random()*80;dx*=1.4;}
+    else if(r==='MIR'){e=mk('ellipse',{cx:p.x,cy:p.y,rx:8,ry:3,stroke:col,'stroke-width':1.5,fill:'none'});dy=(Math.random()-.5)*80;}
+    else if(r==='RAS'){e=mk('circle',{cx:p.x,cy:p.y,r:1.5+Math.random()*2.5,fill:Math.random()<.5?col:'#ffd27a'});dy=-100-Math.random()*140;dx*=.6;}
+    else {e=mk('rect',{x:p.x,y:p.y,width:14,height:10,stroke:col,'stroke-width':1,fill:'none'});dy=-30-Math.random()*60;}
+    e.setAttribute('opacity',0); g.appendChild(e);
+    anim(e,[{transform:'translate(0,0)',opacity:0},{opacity:1,offset:.2},{transform:`translate(${dx}px,${dy}px)`,opacity:0}],{duration:1200+Math.random()*600,delay:d+Math.random()*200});
+  }
+  d+=300;
+  if(a==='SE'){[0,250].forEach(o=>{const c=mk('circle',{cx:p.x,cy:p.y,r:40*k,fill:'none',stroke:col,'stroke-width':3,opacity:0});g.appendChild(c);
+    anim(c,[{transform:'scale(.3)',opacity:1},{transform:'scale(6)',opacity:0}],{duration:1300,delay:d+o});});}
+  if(a==='TU'){[110,85,60].forEach((rr,i)=>{const c=mk('circle',{cx:p.x,cy:p.y,r:rr*k,fill:'none',stroke:col,'stroke-width':2.5,'stroke-dasharray':'12 8',opacity:0});g.appendChild(c);
+    anim(c,[{transform:'scale(1.6) rotate(0deg)',opacity:0},{opacity:1,offset:.3},{transform:'scale(.35) rotate(200deg)',opacity:0}],{duration:1400,delay:d+i*120});});}
+  if(a==='PA'){[-1,1].forEach(s=>{const l=mk('rect',{x:p.x-2,y:p.y-110*k,width:4,height:220*k,fill:col,opacity:0});g.appendChild(l);
+    anim(l,[{transform:'translateX(0)',opacity:1},{transform:`translateX(${s*140*k}px)`,opacity:0}],{duration:1200,delay:d});});
+    const f=mk('rect',{x:p.x-6,y:p.y-110*k,width:12,height:220*k,fill:col,filter:'url(#blur)',opacity:0});g.appendChild(f);
+    anim(f,[{transform:'scaleX(1)',opacity:.9},{transform:'scaleX(20)',opacity:0}],{duration:1200,delay:d});}
+  if(a==='MO'){for(let i=0;i<6;i++){const ang=i*60, l=mk('rect',{x:p.x-1.5,y:p.y-90*k,width:3,height:90*k,fill:col,opacity:0,transform:`rotate(${ang} ${p.x} ${p.y})`});g.appendChild(l);
+      try{l.animate([{opacity:0},{opacity:1,offset:.15},{opacity:1,offset:.75},{opacity:0}],{duration:1600,delay:d,fill:'forwards'});}catch(e){}}
+    let pts=''; for(let i=0;i<6;i++){const an=i*Math.PI/3; pts+=`${p.x+70*k*Math.cos(an)},${p.y+70*k*Math.sin(an)} `;}
+    const hx=mk('polygon',{points:pts,fill:'none',stroke:col,'stroke-width':2.5,opacity:0}); g.appendChild(hx);
+    anim(hx,[{transform:'scale(.2)',opacity:0},{transform:'scale(1)',opacity:1,offset:.25},{transform:'scale(1)',opacity:1,offset:.75},{transform:'scale(1)',opacity:0}],{duration:1600,delay:d});}
+  if(a==='NE'){[-1,1].forEach(s=>{const arc=mk('path',{d:`M${p.x} ${p.y-60*k} A60 60 0 0 ${s>0?1:0} ${p.x} ${p.y+60*k}`,stroke:col,'stroke-width':3,fill:'none',opacity:0});g.appendChild(arc);
+    anim(arc,[{transform:`translateX(${s*120*k}px)`,opacity:0},{opacity:1,offset:.3},{transform:'translateX(0)',opacity:1,offset:.8},{transform:'translateX(0)',opacity:0}],{duration:1400,delay:d});});}
+  if(a==='KA'){for(let i=0;i<9;i++){const c=mk('circle',{cx:p.x,cy:p.y,r:4,fill:col,opacity:0});g.appendChild(c);
+    anim(c,[{transform:'translate(0,0)',opacity:0},{opacity:1,offset:.2},{transform:`translate(${(i%2?1:-1)*(40+i*14)*k}px,${-20-i*6}px)`,opacity:0}],{duration:1100,delay:d+i*70});}}
+}
+function fx(r,a,m,p){
+  const g=mk('g',{}); fxSvg.appendChild(g);
+  let d=0;
+  if(m==='ES'){const from={x:480,y:540};
+    const line=mk('line',{x1:from.x,y1:from.y,x2:p.x,y2:p.y,stroke:SYL[r].color,'stroke-width':3,'stroke-dasharray':'1200','stroke-dashoffset':'1200',opacity:.9}); g.appendChild(line);
+    try{line.animate([{strokeDashoffset:1200,opacity:.9},{strokeDashoffset:0,opacity:.9,offset:.7},{strokeDashoffset:0,opacity:0}],{duration:700,fill:'forwards'});}catch(e){}
+    d=450;}
+  fxCore(g,r,a,p,d,1);
+  if(m==='ON') fxCore(g,r,a,p,d+220,1.6);
+  setTimeout(()=>g.remove(),3200);
+}
+function glint(p,col){const g=mk('g',{});fxSvg.appendChild(g);const c=mk('circle',{cx:p.x,cy:p.y,r:50,fill:col,filter:'url(#blur)',opacity:0});g.appendChild(c);
+  anim(c,[{transform:'scale(.3)',opacity:.8},{transform:'scale(1.8)',opacity:0}],{duration:1200});setTimeout(()=>g.remove(),1400);}
+
+/* ================= DEGREE I: rooms 1 & 2 (items) ================= */
+function interactEarly(t){
+  const f=S.f;
+  const L={
+    skull:()=>{ if(!f.flint){ f.flint=true; give('flint'); addLog('Took the flint from the skull.'); return f.lit?'Something hard is wedged between the skull\'s teeth. You work it free: a flint.':'In the dark, your hands find something smooth and cold on a table: a skull. Something hard is wedged between its teeth. You work it free: a flint.'; }
+      return 'A human skull, set on the table to remind whoever waits here that every life ends.'; },
+    candle:()=>f.lit?'The candle burns steadily. It is the only light in the room.':(f.flint?'A stub of candle in an iron holder. The flint might light it.':'Your fingers find a stub of candle in an iron holder. You have nothing to light it with.'),
+    hourglass:()=>f.lit?'An hourglass. All the sand has run through. Your time of waiting is over.':'Something of glass and wood. You can\'t make it out in the dark.',
+    bread:()=>f.lit?'A crust of bread and a bowl of water. The fare of one who has come to reflect.':'Something soft, and a bowl of water. You leave them be.',
+    vitriol:()=>f.lit?'Letters cut into the wall: V.I.T.R.I.O.L. Below, smaller: Visit the interior of the earth, and by rectifying you will find the hidden stone.':'Letters are cut into the wall, but it is too dark to read them.',
+    innerdoor:()=>'A heavy wooden door, locked. Light leaks in beneath it, from somewhere beyond.',
+    entrance:()=>'The door you were led through. It was bricked shut while you were still blindfolded. The mortar is still damp.',
+    inscription:()=>f.lit?'Carved above the bricked door: NONE RETURN THE WAY THEY CAME.':'Letters are carved above the bricked door. In the dark you trace them with your fingers: NONE RETURN THE WAY THEY CAME.',
+    slab:()=>f.slab?(f.keyTaken?'The stone lies to one side. The hollow beneath it is empty now.':'The stone lies to one side. Something glints in the hollow beneath.'):f.lit?'One floor stone is cut differently from the rest, with a square carved into its face. It sits a finger\'s width proud of the floor. Far too heavy to lift by hand.':'Your foot catches on an uneven stone in the floor.',
+    bar:()=>{ f.barTaken=true; give('bar'); addLog('Took the iron bar.'); return 'A rusted iron bar leans in the corner, one end hammered flat. You take it.'; },
+    key:()=>{ f.keyTaken=true; give('key'); addLog('Took the iron key.'); return 'An iron key, cold and heavy, lies in the hollow. You take it.'; },
+    book:()=>{ if(!f.dust){ f.dust=true; learn('HAL'); return 'A heavy book lies on the lectern under a thick layer of dust. You draw a breath and blow. The dust lifts away in a cloud, and as your breath leaves you, it carries a word: HAL.'; }
+      return 'The book reads: "Each root names a thing. Each action shapes it. Speak them together and the thing will answer. Light, stone and breath are the Apprentice\'s roots; to open, to reveal and to bind, his actions."'; },
+    statue:()=>{ if(!f.veil){ f.veil=true; learn('SE'); return 'You draw the black veil away. Beneath stands a carved Apprentice, eyes open, holding a coil of cord in both hands. As what was hidden is laid bare, a word comes to you: SE.'; }
+      return 'A carved Apprentice, eyes open. '+(f.cordTaken?'His hands are empty now.':'He holds a coil of cord in both hands.'); },
+    cord:()=>{ f.cordTaken=true; give('cord'); addLog('Took the cable-tow.'); return 'You lift the coil of cord from the statue\'s hands. A cable-tow: the cord an Apprentice is led by.'; },
+    bell:()=>{ if(!f.tied) return 'A bell hangs high on the wall. Its rope has been cut off far out of reach.';
+      if(!f.rung){ f.rung=true; bell(); addLog('Rang the bell.'); S.fanfare=false; return 'You pull the cord. The bell sounds once, twice, three times. Beyond the great door, bolts draw back, one after another.'; }
+      return 'The bell has done its work.'; },
+    lodgeDoor:()=>f.rung?'':'A great double door, marked with the square and compass. It is bolted from the other side. Someone beyond must open it.'
+  };
+  return L[t]?L[t]():null;
+}
+function useItem(k,t){
+  const f=S.f, n=NAMES[t]||'that';
+  if(k==='flint'){
+    if(t==='candle'&&!f.lit){ f.lit=true; takeAway('flint'); learn('LUM'); addLog('Lit the candle.'); return 'You strike the flint against the iron holder. Sparks catch the wick, and as the flame rises, a word rises with it, as if the light itself had spoken: LUM.'; }
+    if(t==='candle') return 'The candle is already lit.';
+    return 'You strike the flint. Sparks scatter and die.';
+  }
+  if(k==='bar'){
+    if(t==='slab'){ if(!f.lit) return 'It is too dark to see where to set the bar.'; if(f.slab) return 'The stone has already been moved.';
+      f.slab=true; takeAway('bar'); thud(); learn('KEL'); addLog('Lifted the floor stone.'); return 'You wedge the flat end of the bar under the stone and heave. It grinds aside, and its weight settles into you as a word, heavy and certain: KEL. In the hollow beneath, something glints.'; }
+    if(t==='entrance') return 'You strike the bricks with the bar. Mortar dust falls, but they don\'t move. None return the way they came.';
+    if(t==='innerdoor') return 'You try to force the door with the bar. The wood groans, but the lock holds.';
+    if(t==='skull') return 'You think better of it.';
+    return `The bar is no use on ${n}.`;
+  }
+  if(k==='key'){
+    if(t==='innerdoor'){ f.open1=true; takeAway('key'); learn('PA'); addLog('Unlocked the inner door.'); return 'The key turns with a heavy clunk. As the door swings open and light spills in, a word comes to you: PA.'; }
+    if(t==='entrance') return 'There is no lock here. Only bricks.';
+    if(t==='lodgeDoor') return 'There is no keyhole on this side. It is bolted from within.';
+    return `The key doesn\'t fit anything on ${n}.`;
+  }
+  if(k==='cord'){
+    if(t==='bell'){ f.tied=true; takeAway('cord'); learn('TU'); addLog('Tied the cord to the bell.'); return 'You climb onto the bench and knot the cable-tow to the cut end of the bell-rope. As the knot pulls tight, a word binds itself to you: TU.'; }
+    if(t==='lodgeDoor') return 'There is nothing to tie the cord to.';
+    return `You can\'t think of a reason to tie the cord to ${n}.`;
+  }
+  return 'That does nothing.';
+}
+
+/* ================= DEGREE I: room 3 (words) ================= */
+const G1={
+  LUMSE:n=>`Light spreads over ${n}. Nothing hidden shows itself.`,
+  LUMTU:n=>`Light clings to ${n} for a moment, then slips away. It needs something made to hold it.`,
+  LUMPA:n=>`Light parts around ${n} like a curtain, then closes. Nothing here is shut by light.`,
+  KELSE:n=>`Faint lines trace the stone around ${n}. Solid, plain masonry.`,
+  KELTU:n=>`The stone around ${n} grips tighter. Nothing needed holding.`,
+  KELPA:n=>`The stones near ${n} shudder, but there is no opening here to make.`,
+  HALSE:n=>`You hear only the echo of your own breath around ${n}.`,
+  HALTU:n=>`Your breath knots into a pale thread and fades. There is no voice near ${n} to hold.`,
+  HALPA:n=>S.f.breath?`You almost release the old voice at ${n}, then hold it back. It belongs somewhere that is listening.`:`Your breath flows out toward ${n} and scatters.`
+};
+function look1(t){
+  const f=S.f;
+  return {
+    board:f.board?'The tracing board now reads: LIGHT WHERE THERE IS NONE · HEAR WHAT WAS LEFT · GIVE THE STONE ITS VOICE.':'A tracing board hangs above the altar. Whatever was written on it has faded almost to nothing.',
+    altar:'A plain stone altar. Three squares and three circles are cut into its face: the sigils of the six syllables you know.',
+    candles:'Two candles. Their light barely reaches past the altar.',
+    pillarL:'One of two great pillars, each crowned with a globe. The initiate walks between them.',
+    pillarR:'The second pillar, its globe carved with faint lines like a map of the heavens.',
+    door:'A great stone door. Every seam between its stones runs toward the carved mouth at its center.',
+    mouth:f.seal?'The ring of sigils around the mouth is broken. The stones are no longer held.':'A carved mouth, lips parted, inside a ring of glowing sigils. It looks as if it is waiting to be spoken into.',
+    sconce:f.sconce?'Light burns in the sconce, bound there by your word.':'An iron sconce beside the alcove, made to hold a light. There is no candle in it, and no oil.',
+    alcove:f.sconce?'A shallow alcove. A spiral is carved into its back wall.':'The alcove is too dark to see into.',
+    whisper:(f.breath||f.seal)?'The spiral is still now. Whatever lingered here, you have taken with you.':f.whisper?'The words still hang around the spiral, fading slowly.':'A carved spiral. The air around it seems to stir, as if something was once said here.'
+  }[t];
+}
+function resolve1(r,a,m,t){
+  const w=r+a, f=S.f, n=NAMES[t]||'the empty air';
+  if(t==='board'&&w==='LUMSE'){ const was=f.board; f.board=true; return (was?'The inscription glows again':'Gold light spreads across the tracing board, and faded letters rise from the wood')+': LIGHT WHERE THERE IS NONE · HEAR WHAT WAS LEFT · GIVE THE STONE ITS VOICE.'; }
+  if(t==='sconce'&&w==='LUMTU'){ if(f.sconce) return 'The light is already bound here. It burns steadily.'; f.sconce=true; return 'Threads of gold wind around the empty sconce, and the light stays, steady as a flame. The alcove is no longer dark.'; }
+  if(t==='sconce'&&w==='LUMSE'&&!f.sconce) return 'Light flares in the empty cup for a moment, showing how it was made: a vessel for a light that does not burn on oil.';
+  if(t==='alcove'&&!f.sconce){
+    if(w==='LUMSE') return 'Light spreads into the alcove for a breath, showing a carved spiral on the back wall, then the dark swallows it again. The light needs to stay.';
+    if(w==='LUMTU') return 'Light clings to the dark stone and slips off. It needs something made to hold it, like the empty sconce beside the alcove.';
+    if(w==='HALSE') return 'Somewhere in the dark, a whisper stirs, but you cannot find where it comes from. You need to see.';
+  }
+  if(t==='whisper'){
+    if(w==='HALSE'){ if(f.breath||f.seal) return 'Only silence now. You already carry the voice that was here.'; f.whisper=true; return 'Pale breath curls from the spiral, and a voice that is not yours whispers: "Let the stone hear the one who came before." The words hang in the air, fading.'; }
+    if(w==='HALTU'){ if(f.breath||f.seal) return 'There is nothing left here to hold.'; if(!f.whisper) return 'Your breath knots around the spiral, but there is nothing in it. Something here must first be heard.'; f.breath=true; return 'Threads of pale breath wind around the lingering whisper and draw it into a small glowing knot. You carry the old voice with you.'; }
+    if(w==='LUMSE') return 'Light fills the spiral\'s grooves. They are worn smooth, as if breath has passed over them for centuries.';
+  }
+  if(t==='mouth'){
+    if(w==='HALPA'){ if(f.seal) return 'The mouth is silent. It has already heard what it needed.';
+      if(f.breath){ f.seal=true; f.breath=false; return 'You release the knot of breath into the carved mouth. The old voice speaks from inside the stone, and the ring of sigils cracks and falls away.'; }
+      return 'Your own breath flows into the carved mouth. The sigils flicker and stay. It does not know your voice.'; }
+    if(w==='HALSE') return f.seal?'Silence in the stone.':'From deep in the stone comes the faint echo of a voice, waiting. The mouth wants to be spoken into, but not by you.';
+    if(w==='HALTU') return 'Your breath knots around the carved lips and fades. The mouth has nothing to give; it is waiting to receive.';
+  }
+  if(t==='door'||t==='mouth'){
+    if(w==='KELPA'){ if(!f.seal) return 'The stones shift and grind, then settle back. Something holds them: every seam runs to the sealed mouth.'; f.door=true; S.fanfare=true; return 'The stones of the door split down the middle and grind apart. Warm light pours in from a stair beyond.'; }
+    if(w==='KELSE') return f.seal?'The outlines of the stones glow. Nothing holds them now.':'The outline of every stone glows, and you see what binds them: all the seams meet at the carved mouth, which is sealed like a lock waiting for a voice.';
+    if(w==='KELTU') return 'The stones lock even tighter together. That is the opposite of what you want.';
+  }
+  /* earlier rooms */
+  if(t==='entrance'){
+    if(w==='KELPA') return 'The bricks shudder and dust sifts from the mortar, but they hold. NONE RETURN THE WAY THEY CAME. Whatever sealed this door was stronger than your word.';
+    if(w==='KELSE') return 'Lines of force glow in the bricks. They are bound by something more than mortar.';
+  }
+  if(t==='vitriol'&&w==='LUMSE') return 'The letters glow. Beneath V.I.T.R.I.O.L., fainter words appear for a moment: the hidden stone is not only in the floor.';
+  if(t==='book'&&w==='LUMSE') return 'Light runs across the pages. In the margin, in a different hand, someone has written: "Not all of it is here."';
+  if(t==='lodgeDoor'&&w==='KELPA') return 'The great door is wood, not stone, and bolted from the other side. Your word finds nothing to move.';
+  if(t==='bell'&&w==='HALSE') return 'The bell hums faintly with the echo of every time it has been rung.';
+  if(t&&t.startsWith('to')) return 'The word drifts through the doorway and fades.';
+  if(t==='doorway') return 'The word drifts up the stair ahead of you. The way is open; you only need to walk through.';
+  if(t==='board'&&w==='KELSE') return 'The tracing board is wood, not stone. Your word slides off it.';
+  return G1[w](n);
+}
+
+/* ================= DEGREE II rules ================= */
+const RN={LUM:'Light',KEL:'The weight of stone',HAL:'Your breath',MIR:'A sheen of water',RAS:'Heat',VEL:'A ghost-image of the past'};
+const AT={SE:(R,n)=>`${R} spreads over ${n}, but nothing hidden shows itself.`,
+  TU:(R,n)=>`${R} winds around ${n} and slips away. Nothing here is made to hold it.`,
+  PA:(R,n)=>`${R} parts around ${n}, but nothing here is shut.`,
+  MO:(R,n)=>`${R} settles over ${n} and goes still. Nothing here was moving.`,
+  NE:(R,n)=>`${R} draws the seams of ${n} together, but nothing here is broken.`,
+  KA:(R,n)=>`${R} gathers near ${n} and drifts a little way, with nowhere to go.`};
+const MT={ON:' The word rings out doubled, but more of nothing is still nothing.',ES:' The word reaches far, but distance was not what this needed.'};
+function generic2(r,a,m,n){
+  if(r==='VEL'&&a==='SE') return `${RN.VEL} flickers over ${n}, but nothing happened here worth remembering.`+(m?MT[m]:'');
+  return AT[a](RN[r],n)+(m?MT[m]:'');
+}
+function look2(t){
+  const f=S.f;
+  return {
+    veil:f.veilStill?'The water hangs motionless in the arch, like a sheet of glass. Your reflection looks back at you.':'A curtain of water falls across the arch, from a slot in the stone above into a channel below. Something lies behind it.',
+    pillarL:'A whole pillar, crowned with a globe.',
+    pillarR:f.pillar?'Whole again, crowned like its twin.':'The second pillar is broken off at half its height. Its crown is gone.',
+    crown:f.crownHere?'The carved crown of the broken pillar, lying at its foot.':'Across the chasm, on a narrow ledge, lies something round and carved. It looks like the crown of a pillar.',
+    chasm:'A chasm splits the chamber. You cannot see the bottom, and it is far too wide to jump.',
+    brazier:f.brazier?'The far brazier burns, lighting the ledge across the chasm.':'Across the chasm, barely visible, an iron brazier stands cold.',
+    inner:'An inner door, with an empty pillar-shaped groove on either side. Carved above it: BETWEEN TWO PILLARS STANDING.',
+    stair:'The winding stair you climbed. It turns out of sight below.',
+    inscription:'Carved above the stair: THE FELLOWCRAFT LEARNS TO CARRY, TO MEND, AND TO STILL.',
+    basin:f.read?'The basin\'s reflection reads: STILL THE WATER, THEN PART IT.':'A stone basin of water on a pedestal, beneath the carved letters.',
+    mirrorText:'Letters are carved into the wall above the basin, but they run backwards.'
+  }[t];
+}
+function resolve2(r,a,m,t){
+  const f=S.f, n=NAMES[t]||'the empty air', ra=r+a;
+  if(t==='brazier'||t==='chasm'){
+    if(ra==='RASKA'&&m==='ES'){ if(f.brazier) return 'The brazier already burns.'; f.brazier=true;
+      return 'Heat gathers in your word and leaps across the chasm as a trail of embers. The far brazier roars alight, and its glow shows a narrow ledge on the far side, with something round and carved lying on it.'; }
+    if(ra==='RASKA'&&m==='ON') return 'A thick trail of embers rolls out over the chasm and sinks into the dark. Stronger was not the problem. It is too far.';
+    if(ra==='RASKA') return 'A trail of embers drifts out over the chasm and falls short, sinking into the dark. The brazier is too far for this word.';
+    if(r==='RAS'&&m==='ES') return 'Heat leaps across the chasm, but it doesn\'t travel as fire. It needs to be carried.';
+    if(ra==='LUMKA'&&m==='ES') return 'Light streaks across and splashes against the brazier, then fades. The brazier wants fire, not light.';
+    if(ra==='HALKA'&&m==='ES') return 'Your voice crosses the chasm and comes back from stone. There is a ledge on the far side.';
+    if(ra==='LUMSE'&&!f.brazier) return 'Light spreads over the chasm. For a moment you glimpse the far ledge, a cold brazier, and something round lying in the dark. Then it fades.';
+  }
+  if(t==='crown'&&!f.crownHere){
+    if(ra==='KELKA'&&m==='ES'){ f.crownHere=true; return 'The weight of stone answers you from across the chasm. The carved crown lifts from the ledge, glides over the dark, and settles at the foot of the broken pillar behind you.'; }
+    if(ra==='KELKA') return 'The carved crown rocks on the ledge, but your word fades before it can reach that far.';
+    if(ra==='VELSE') return 'A ghost-image flickers: the crown sitting atop a pillar, before someone threw it into the dark.';
+    if(ra==='LUMSE') return 'Light shows the carving clearly. It is the capital and globe of a pillar.';
+    if(ra==='KELNE') return 'You feel the crown want to rejoin something, but it is on the far side of the chasm, nowhere near what it belongs to.';
+  }
+  if(t==='pillarR'||(t==='crown'&&f.crownHere)){
+    if(ra==='KELNE'){
+      if(f.pillar) return 'The pillar already stands whole.';
+      if(!f.crownHere) return 'The cracks in the broken pillar draw together, but its top is gone. There is nothing to mend it to. Its crown must be somewhere.';
+      if(m==='ON'){ f.pillar=true; S.fanfare=!!f.veilOpen; return 'Your word rings out doubled. The pillar\'s cracks seal, the crown rises from the floor and locks onto the broken top, and the second pillar stands whole again.'+(f.veilOpen?' Beyond the parted water, the inner door swings open.':''); }
+      return 'The crown lifts and the cracks begin to close, but the word is not strong enough. The stone sags back. It needs more force.';
+    }
+    if(ra==='VELSE') return f.pillar?'You see the pillar as it always was. Whole.':'Ghost-images rise in sepia: the pillar whole, crowned with a globe. Then a figure in a dark robe strikes the crown loose and hurls it east, toward the chasm. The memory fades.';
+    if(ra==='KELSE') return f.pillar?'The stone is whole and sound.':'Lines of force glow in the broken stone. The pillar is sound below, but its crown is missing.';
+    if(ra==='KELKA'&&t==='crown') return 'The crown slides along the floor and stops at the pillar\'s foot. It is already where it belongs. It needs joining, not carrying.';
+  }
+  if(t==='veil'){
+    if(ra==='MIRPA'){
+      if(f.veilStill){ f.veilOpen=true; S.fanfare=!!f.pillar; return 'The stilled water splits down the middle like glass and parts. Beyond, a short passage leads to an inner door.'+(f.pillar?' Between the two standing pillars, it swings open.':''); }
+      if(m==='ON') return 'The water parts wider for a heartbeat, then crashes back. However hard you push, it is falling too fast to stay open.';
+      return 'The falling water parts for a moment and you glimpse a passage beyond. Then it rushes closed again before you can step through. It falls too fast to hold open.';
+    }
+    if(ra==='MIRMO'){ f.veilStill=true; return 'The falling water slows, then stops, hanging in the arch like a sheet of glass. Your own reflection looks back at you.'; }
+    if(ra==='MIRSE') return f.veilStill?'The stilled water shows the truth behind it: a passage, and an inner door.':'The water shows its true depth. It is only a thin veil, and behind it is a passage.';
+    if(ra==='RASMO') return 'Heat settles on the falling water and steam rises, but it keeps falling.';
+    if(ra==='LUMSE') return 'Light scatters through the falling water into a hundred glints. You glimpse a passage beyond.';
+    if(ra==='VELSE') return 'A ghost-image: a Fellowcraft before you raises a hand, and the water stops, then parts. The memory fades before you see the words.';
+    if(ra==='KELPA') return 'There is no stone to open here. Only water.';
+  }
+  if(t==='basin'||t==='mirrorText'){
+    if(ra==='MIRSE'){ f.read=true; return 'The basin\'s surface shows the true reflection of the backwards words on the wall: STILL THE WATER, THEN PART IT.'; }
+    if(ra==='MIRMO') return 'The basin goes perfectly flat, but the letters on the wall are still backwards. You need the water\'s truth, not just its stillness.';
+    if(ra==='LUMSE') return 'The letters glow, but they are cut backwards, meant to be read in a reflection.';
+    if(ra==='VELSE') return 'A ghost-image: an initiate leaning over the basin, reading the wall in its water.';
+  }
+  if(t==='inner'&&!f.pillar) return 'Your word strikes the inner door and fades. Carved above it: BETWEEN TWO PILLARS STANDING.';
+  if(t==='doorway') return 'The word drifts through the open door ahead of you. The way is open; you only need to walk through.';
+  if(t==='stair'&&ra==='VELSE') return 'Ghost-images of initiates climbing, one after another, each pausing at the top to read the inscription.';
+  if(t==='pillarL'&&ra==='VELSE') return 'This pillar has always stood. The memory is calm.';
+  return generic2(r,a,m,n);
+}
+
+/* ================= play ================= */
+function say(html){$('msg').innerHTML=html;}
+function cast(t,p){
+  const r=word.root,a=word.action,m=word.mod,w=wordText(r,a,m);
+  S.spoken++; S.tried.add(w);
+  strike(r); sing(a,0.25); if(m){modSound(m,0.5); if(m==='ON') strike(r,0.55,0.5);}
+  fx(r,a,m,p);
+  S.fanfare=false;
+  const res=S.ch===1?resolve1(r,a,m,t):resolve2(r,a,m,t);
+  say(`<span class="w">${w}</span> — ${res}`);
+  addLog(`<span>${w}</span> → ${NAMES[t]||'the air'}`);
+  clearWord();
+  const fan=S.fanfare;
+  setTimeout(()=>{render(); if(fan) chord();},700);
+}
+const TRAVEL={toHall:['hall',0],toReflection:['reflection',1],toLodge:['apprentice',0],toHall2:['hall',0]};
+function travel(t){
+  const [room,view]=TRAVEL[t]; S.room=room; S.view=view;
+  const first={hall:'hallSeen',apprentice:'appSeen'}[room];
+  let msg={hall:'You step into a long hall. A lectern stands before a great double door. Something veiled waits to the east, and a bell hangs high on the west wall.',
+    reflection:'You step back into the small room where you began.',apprentice:'You enter the Apprentice\'s Chamber. Candlelight, two great pillars, and a faded tracing board above the altar.'}[room];
+  if(room==='hall'&&S.f.hallSeen) msg='You are back in the Hall of Instruction.';
+  if(room==='apprentice'&&S.f.appSeen) msg='You are back in the Apprentice\'s Chamber.';
+  if(room==='apprentice'&&!S.f.appSeen) msg+=' The door behind you stays open. This time, the way back is not sealed.';
+  if(first) S.f[first]=true;
+  say(msg); render();
+}
+function interact(t){
+  if(TRAVEL[t]) return travel(t);
+  if(t==='doorway') return finish();
+  let s=null;
+  if(S.ch===1&&(S.room==='reflection'||S.room==='hall')) s=interactEarly(t);
+  if(s===null) s=S.ch===1?look1(t):look2(t);
+  if(s) say(s);
+  setTimeout(render,50);
+}
+function svgPoint(evt){const pt=scene.createSVGPoint();pt.x=evt.clientX;pt.y=evt.clientY;return pt.matrixTransform(scene.getScreenCTM().inverse());}
+function centerOf(g,e){let p=svgPoint(e); if(g){try{const b=g.getBBox();p={x:b.x+b.width/2,y:b.y+b.height/2};}catch(err){}} return p;}
+scene.addEventListener('click',e=>{
+  const g=e.target.closest('.hot'), t=g?g.dataset.id:null;
+  if(S.sel){
+    if(!t){ S.sel=null; renderInv(); say('You put it away.'); return; }
+    const k=S.sel; const res=useItem(k,t); S.sel=null;
+    say(res); glint(centerOf(g,e),'#ffd98a'); setTimeout(render,250); return;
+  }
+  const ready=word.root&&word.action;
+  if(ready) return cast(t,centerOf(g,e));
+  if(t) interact(t);
+});
+function turn(d){S.view=(S.view+d+4)%4;render();}
+$('navL').onclick=()=>turn(-1); $('navR').onclick=()=>turn(1);
+$('clearBtn').onclick=clearWord;
+$('hintBtn').onclick=()=>{document.body.classList.toggle('hints');$('hintBtn').classList.toggle('on');};
+$('muteBtn').onclick=()=>{muted=!muted;$('muteBtn').textContent=muted?'Sound off':'Sound on';};
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){document.body.classList.add('hints');e.preventDefault();}
+  if(e.key==='ArrowLeft') turn(-1);
+  if(e.key==='ArrowRight') turn(1);
+  if(e.key==='Escape'){clearWord(); S.sel=null; renderInv();}
+});
+document.addEventListener('keyup',e=>{if(e.code==='Space'&&!$('hintBtn').classList.contains('on'))document.body.classList.remove('hints');});
+
+function startChapter(ch){
+  S=fresh(ch); clearWord(); buildTiles();
+  ['intro','ch2intro','ending'].forEach(id=>$(id).classList.add('hidden'));
+  $('learn').classList.remove('show');
+  if(ch===2) $('ch2intro').classList.remove('hidden');
+  say(CH[ch].start); render();
+}
+$('beginBtn').onclick=()=>{ac(); startChapter(1);};
+$('skipBtn').onclick=()=>{ac(); startChapter(2);};
+$('ch2Btn').onclick=()=>{$('ch2intro').classList.add('hidden');};
+function finish(){
+  chord();
+  const C=CH[S.ch];
+  $('endTitle').textContent=S.ch===1?'Degree I complete':'Degree II complete';
+  $('endStats').textContent=`You leave the ${ROOMS[S.room].name.replace(/^The /,'')} having spoken ${S.spoken} word${S.spoken===1?'':'s'}, ${S.tried.size} of the ${C.total} possible.`;
+  $('endNext').textContent=S.ch===1?'The winding stair rises ahead, and with it three new roots, three new actions, and the first modifiers.':'Beyond the inner door lies the Master\'s degree: ZOR, the modifiers -IM and -UL, and the last of the light words. (Not built yet.)';
+  $('nextBtn').classList.toggle('hidden',S.ch!==1);
+  $('ending').classList.remove('hidden');
+}
+$('nextBtn').onclick=()=>startChapter(2);
+$('againBtn').onclick=()=>{const ch=S.ch; startChapter(ch); $('ch2intro').classList.add('hidden');};
+$('resetBtn').onclick=()=>{const ch=S.ch; startChapter(ch); $('ch2intro').classList.add('hidden');};
+
+buildTiles(); say(CH[1].start); render();
+</script>
+</body>
+</html>
